@@ -1,0 +1,25 @@
+{
+  "name": "dugite-api",
+  "version": "0.0.1-alpha.1",
+  "description": "JS binding and API for Git",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "mocha --opts ./mocha.opts src/**/*.spec.ts"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "check-if-windows": "^1.0.0",
+    "dugite": "^1.29.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^3.5.2",
+    "@types/mocha": "^2.2.41",
+    "@types/node": "^7.0.22",
+    "chai": "^4.0.0",
+    "mocha": "^3.4.2",
+    "ts-node": "^3.0.4",
+    "typescript": "^2.3.4"
+  }
+}
