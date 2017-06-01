@@ -7,7 +7,7 @@ const byline = require('byline')
 /**
  * Merges an instance of IGitExecutionOptions with a process callback provided
  * by progressProcessCallback.
- * 
+ *
  * If the given options object already has a processCallback specified it will
  * be overwritten.
  */
@@ -40,7 +40,9 @@ export function progressProcessCallback(
 function merge<T, K extends keyof T>(obj: T, subset: Pick<T, K>): T {
     const copy = Object.assign({}, obj)
     for (const k in subset) {
-        copy[k] = subset[k]
+        if (subset.hasOwnProperty(k)) {
+            copy[k] = subset[k]
+        }
     }
     return copy
 }

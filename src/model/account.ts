@@ -37,7 +37,7 @@ export interface Account {
      * The database id for this account.
      */
     readonly id: number
-    
+
     /**
      * The friendly name associated with this account.
      */
@@ -53,7 +53,7 @@ export namespace Account {
         return {
             login: '',
             endpoint: getDotComAPIEndpoint(),
-            token: '', 
+            token: '',
             emails: [],
             avatarURL: '',
             id: -1,
@@ -63,7 +63,7 @@ export namespace Account {
 
     /**
      * Copies the `account` argument and sets the authentication token on it.
-     * 
+     *
      * @param account the account to set the token on it.
      * @param token the token to set.
      */

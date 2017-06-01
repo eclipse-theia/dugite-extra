@@ -144,6 +144,7 @@ function getDescriptionForError(error: DugiteError): string {
         case DugiteError.SSHKeyAuditUnverified: return 'The SSH key is unverified.'
         case DugiteError.SSHAuthenticationFailed:
         case DugiteError.SSHPermissionDenied:
+        // tslint:disable-next-line:max-line-length
         case DugiteError.HTTPSAuthenticationFailed: return `Authentication failed. You may not have permission to access the repository. Open ${__DARWIN__ ? 'preferences' : 'options'} and verify that you're signed in with an account that has permission to access this repository.`
         case DugiteError.RemoteDisconnection: return 'The remote disconnected. Check your Internet connection and try again.'
         case DugiteError.HostDown: return 'The host is down. Check your Internet connection and try again.'
@@ -157,6 +158,7 @@ function getDescriptionForError(error: DugiteError): string {
         case DugiteError.RevertConflicts: return 'To finish reverting, please merge and commit the changes.'
         case DugiteError.EmptyRebasePatch: return 'There aren’t any changes left to apply.'
         case DugiteError.NoMatchingRemoteBranch: return 'There aren’t any remote branches that match the current branch.'
+        // tslint:disable-next-line:max-line-length
         case DugiteError.NothingToCommit: return 'There are no changes to commit.'
         case DugiteError.NoSubmoduleMapping: return 'A submodule was removed from .gitmodules, but the folder still exists in the repository. Delete the folder, commit the change, then try again.'
         case DugiteError.SubmoduleRepositoryDoesNotExist: return 'A submodule points to a location which does not exist.'
@@ -170,8 +172,11 @@ function getDescriptionForError(error: DugiteError): string {
         case DugiteError.BadRevision: return 'Bad revision.'
         case DugiteError.NotAGitRepository: return 'This is not a git repository.'
         case DugiteError.ProtectedBranchForcePush: return 'This branch is protected from force-push operations.'
+        // tslint:disable-next-line:max-line-length
         case DugiteError.ProtectedBranchRequiresReview: return 'This branch is protected and any changes requires an approved review. Open a pull request with changes targeting this branch instead.'
+        // tslint:disable-next-line:max-line-length
         case DugiteError.PushWithFileSizeExceedingLimit: return 'The push operation includes a file which exceeds GitHub\'s file size restriction of 100MB. Please remove the file from history and try again.'
+        // tslint:disable-next-line:max-line-length
         case DugiteError.HexBranchNameRejected: return 'The branch name cannot be a 40-character string of hexadecimal characters, as this is the format that Git uses for representing objects.'
         case DugiteError.ForcePushRejected: return 'The force push has been rejected for the current branch.'
         case DugiteError.InvalidRefLength: return 'A ref cannot be longer than 255 characters.'

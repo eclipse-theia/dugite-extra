@@ -3,9 +3,9 @@ import { RepositoryPath } from '../model/repository';
 import { Branch, BranchType } from '../model/branch';
 import { Account } from '../model/account';
 
-/** 
+/**
  * Create a new branch from the given start point.
- * 
+ *
  * @param repositoryPath - The repository in which to create the new branch or its FS path.
  * @param name       - The name of the new branch
  * @param startPoint - A committish string that the new branch should be based

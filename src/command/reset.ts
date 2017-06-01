@@ -12,7 +12,7 @@ export enum GitResetMode {
 
 /**
  * Resets with the mode to the ref.
- * 
+ *
  * @param repositoryPath the repository path.
  * @param mode the reset mode.
  * @param ref the reference. By default, resets to `HEAD`.
@@ -24,7 +24,7 @@ export async function reset(repositoryPath: RepositoryPath, mode: GitResetMode, 
 
 /**
  * Unstages all paths in the repository.
- * 
+ *
  * @param repositoryPath the path to the repository.
  */
 export async function unstageAll(repositoryPath: RepositoryPath): Promise<true> {

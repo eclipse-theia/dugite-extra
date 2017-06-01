@@ -11,7 +11,7 @@ export type ProgressCallback = (progress: ICheckoutProgress) => void
  *
  * @param repository The repository in which the branch checkout should take place.
  * @param name The branch name that should be checked out.
- * @param progressCallback An optional function which will be invoked with information about the current progress of the checkout operation. 
+ * @param progressCallback An optional function which will be invoked with information about the current progress of the checkout operation.
  *  When provided this enables the `--progress` command line flag for `git checkout`.
  */
 export async function checkoutBranch(repositoryPath: RepositoryPath, name: string, progressCallback?: ProgressCallback): Promise<void> {

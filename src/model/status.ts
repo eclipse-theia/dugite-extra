@@ -48,7 +48,7 @@ export class FileChange {
 
     /**
      * Creates a new file change instance.
-     * 
+     *
      * @param path The relative path to the file in the repository.
      * @param status The original path in the case of a renamed file.
      * @param oldPath The status of the change to the file.
@@ -79,7 +79,6 @@ export class WorkingDirectoryFileChange extends FileChange {
 
     /**
      * Create a new WorkingDirectoryFileChange with the given includedness.
-     * @param include 
      */
     public withIncludeAll(include: boolean): WorkingDirectoryFileChange {
         const newSelection = include
@@ -122,7 +121,7 @@ export class WorkingDirectoryStatus {
 
     /**
      * Update by replacing the file with the same ID with a new file.
-     * 
+     *
      * @param file updates the argument after replacing all files then returns with a new instance.
      */
     public byReplacingFile(file: WorkingDirectoryFileChange): WorkingDirectoryStatus {

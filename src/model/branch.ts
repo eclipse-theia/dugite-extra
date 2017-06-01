@@ -3,12 +3,12 @@ import { removeRemotePrefix } from '../util/api'
 
 /**
  * The branch type.
- * 
- * NOTE: The values here matter as they are used to sort local and remote branches, Local should come before Remote
+ *
+ * NOTE: The values here matter as they are used to sort local and remote branches, Local should come before Remote.
  */
 export enum BranchType {
     Local = 0,
-    Remote = 1,
+    Remote = 1
 }
 
 /**

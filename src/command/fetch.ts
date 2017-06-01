@@ -5,9 +5,9 @@ import { IFetchProgress, FetchProgressParser, executionOptionsWithProgress } fro
 
 /**
  * Fetch from the given remote.
- * 
+ *
  * @param repositoryPath - The repository to fetch into. Or the FS path to the repository.
- * 
+ *
  * @param account    - The account to use when authenticating with the remote
  *
  * @param remote     - The remote to fetch from
@@ -32,7 +32,7 @@ export async function fetch(repositoryPath: RepositoryPath, account: Account | u
             // In addition to progress output from the remote end and from
             // git itself, the stderr output from pull contains information
             // about ref updates. We don't need to bring those into the progress
-            // stream so we'll just punt on anything we don't know about for now. 
+            // stream so we'll just punt on anything we don't know about for now.
             if (progress.kind === 'context') {
                 if (!progress.text.startsWith('remote: Counting objects')) {
                     return
@@ -60,7 +60,7 @@ export async function fetch(repositoryPath: RepositoryPath, account: Account | u
 
 /**
  * Fetch a given refspec from the given remote.
- * 
+ *
  * @param repositoryPath the repository or its FS path.
  * @param account the optional account if required.
  * @param remote the remote name.
