@@ -12,7 +12,8 @@
   "dependencies": {
     "byline": "^5.0.0",
     "check-if-windows": "^1.0.0",
-    "dugite": "^1.29.0"
+    "dugite": "^1.29.0",
+    "is-osx": "^1.0.2"
   },
   "devDependencies": {
     "@types/chai": "^3.5.2",

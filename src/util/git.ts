@@ -3,7 +3,7 @@ import { GitProcess, IGitResult as DugiteResult, GitError as DugiteError, IGitEx
 import { Account } from '../model/account';
 
 const __WIN32__: boolean = require('check-if-windows');
-const __DARWIN__: boolean = true;
+const __DARWIN__: boolean = require('is-osx');
 
 /**
  * An extension of the execution options in dugite that
