@@ -31,14 +31,14 @@ export interface IGitExecutionOptions extends DugiteExecutionOptions {
  */
 export interface IGitResult extends DugiteResult {
     /**
-     * The parsed git error. This will be null when the exit code is include in
+     * The parsed git error. This will be undefined when the exit code is include in
      * the `successExitCodes`, or when dugite was unable to parse the
      * error.
      */
-    readonly gitError: DugiteError | null
+    readonly gitError: DugiteError | undefined
 
     /** The human-readable error description, based on `gitError`. */
-    readonly gitErrorDescription: string | null
+    readonly gitErrorDescription: string | undefined
 }
 
 function getResultMessage(result: IGitResult) {
@@ -102,16 +102,16 @@ export async function git(args: string[], path: string, name: string, options?: 
     const result = await GitProcess.exec(args, path, options);
     const exitCode = result.exitCode
 
-    let gitError: DugiteError | null = null
+    let gitError: DugiteError | undefined = undefined
     const acceptableExitCode = opts.successExitCodes ? opts.successExitCodes.has(exitCode) : false
     if (!acceptableExitCode) {
-        gitError = GitProcess.parseError(result.stderr)
+        gitError = GitProcess.parseError(result.stderr) || undefined
         if (!gitError) {
-            gitError = GitProcess.parseError(result.stdout)
+            gitError = GitProcess.parseError(result.stdout) || undefined
         }
     }
 
-    const gitErrorDescription = gitError ? getDescriptionForError(gitError) : null
+    const gitErrorDescription = gitError ? getDescriptionForError(gitError) : undefined
     const gitResult = { ...result, gitError, gitErrorDescription }
 
     let acceptableError = true
@@ -204,7 +204,7 @@ export const gitNetworkArguments: ReadonlyArray<string> = [
 ]
 
 /** Get the environment for authenticating remote operations. */
-export function envForAuthentication(account: Account | null): Object {
+export function envForAuthentication(account: Account | undefined): Object {
     const env = {
         'DESKTOP_PATH': process.execPath,
         'DESKTOP_ASKPASS_SCRIPT': getAskPassScriptPath(),
