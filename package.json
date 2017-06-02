@@ -1,12 +1,24 @@
 {
-  "name": "dugite-api",
+  "name": "dugite-extra",
   "version": "0.0.1-alpha.1",
-  "description": "JS binding and API for Git",
+  "description": "High-level Git commands for dugite.",
   "main": "src/index.ts",
   "scripts": {
     "build": "tsc && tslint -c ./tslint.json --project ./tsconfig.json",
     "test": "mocha --opts ./mocha.opts src/**/*.spec.ts"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TypeFox/dugite-extra"
+  },
+  "bugs": {
+    "url": "https://github.com/TypeFox/dugite-extra/issues"
+  },
+  "homepage": "https://github.com/TypeFox/dugite-extra",
+  "files": [
+    "lib",
+    "src"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
@@ -19,9 +31,11 @@
     "@types/chai": "^3.5.2",
     "@types/mocha": "^2.2.41",
     "@types/node": "^7.0.22",
+    "@types/temp": "^0.8.29",
     "chai": "^4.0.0",
     "mocha": "^3.4.2",
     "os-tmpdir": "^1.0.2",
+    "temp": "^0.8.3",
     "ts-node": "^3.0.4",
     "tslint": "^5.4.0",
     "typescript": "^2.3.4",
