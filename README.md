@@ -1,2 +1,4 @@
-# dugite-api
-Dugite API - JS bindings and API for Git
+# dugite-extra
+High-level Git commands for [dugite].
+
+[dugite]: https://github.com/desktop/dugite
