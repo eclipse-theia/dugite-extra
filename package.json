@@ -22,10 +22,20 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@types/event-kit": "^1.2.30",
+    "@types/keytar": "^4.0.0",
+    "@types/node-fetch": "^1.6.7",
     "byline": "^5.0.0",
     "check-if-windows": "^1.0.0",
     "dugite": "^1.29.0",
-    "is-osx": "^1.0.2"
+    "event-kit": "^2.3.0",
+    "is-osx": "^1.0.2",
+    "keytar": "^4.0.3",
+    "node-fetch": "^1.7.0",
+    "octokat": "^0.8.0",
+    "read": "^1.0.7",
+    "username": "^2.3.0",
+    "uuid": "^3.0.1"
   },
   "devDependencies": {
     "@types/chai": "^3.5.2",
@@ -38,7 +48,6 @@
     "temp": "^0.8.3",
     "ts-node": "^3.0.4",
     "tslint": "^5.4.0",
-    "typescript": "^2.3.4",
-    "uuid": "^3.0.1"
+    "typescript": "^2.3.4"
   }
 }

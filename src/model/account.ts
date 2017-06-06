@@ -63,14 +63,14 @@ export namespace Account {
 
     /**
      * Copies the `account` argument and sets the authentication token on it.
+     * Also could set the desired `login` name.
      *
      * @param account the account to set the token on it.
      * @param token the token to set.
+     * @param login the optional login name to set.
      */
-    export function withToken(account: Account, token: string): Account {
-        return Object.assign(account, {
-            token
-        }) as Account;
+    export function withToken(account: Account, token: string, login?: string): Account {
+        return Object.assign(account, { token }, { login: login || account.login }) as Account;
     }
 
 }
