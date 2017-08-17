@@ -1,7 +1,7 @@
 import * as os from 'os';
-import { getDotComAPIEndpoint } from '../util/api';
+import { getDotComAPIEndpoint } from '../core/api';
 import { Response } from 'node-fetch';
-import { deserialize, request } from '../util/http';
+import { deserialize, request } from '../core/http';
 import { Account } from '../model/account';
 
 const uuid = require('uuid/v4');

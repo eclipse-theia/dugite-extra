@@ -1,8 +1,8 @@
-import { git } from '../util/git'
-import { RepositoryPath } from '../model/repository';
+import { git } from '../core/git'
+import { Repository } from '../model/repository'
 import { DiffSelectionType } from '../model/diff'
 import { applyPatchToIndex } from './apply'
-import { FileStatus, WorkingDirectoryFileChange } from '../model/status'
+import { AppFileStatus, WorkingDirectoryFileChange } from '../model/status'
 
 interface IUpdateIndexOptions {
   /**
@@ -60,13 +60,16 @@ interface IUpdateIndexOptions {
  *
  * @param options See the IUpdateIndexOptions interface for more details.
  */
-async function updateIndex(repositoryPath: RepositoryPath, paths: ReadonlyArray<string>, options: IUpdateIndexOptions = { }) {
-
+async function updateIndex(
+  repository: Repository,
+  paths: ReadonlyArray<string>,
+  options: IUpdateIndexOptions = {}
+) {
   if (!paths.length) {
     return
   }
 
-  const args = [ 'update-index' ]
+  const args = ['update-index']
 
   if (options.add !== false) {
     args.push('--add')
@@ -86,7 +89,7 @@ async function updateIndex(repositoryPath: RepositoryPath, paths: ReadonlyArray<
 
   args.push('-z', '--stdin')
 
-  await git(args, RepositoryPath.getPath(repositoryPath), 'updateIndex', {
+  await git(args, repository.path, 'updateIndex', {
     stdin: paths.join('\0'),
   })
 }
@@ -99,7 +102,10 @@ async function updateIndex(repositoryPath: RepositoryPath, paths: ReadonlyArray<
  * the job of this function is to set up the index in such a way that it
  * reflects what the user has selected in the app.
  */
-export async function stageFiles(repositoryPath: RepositoryPath, files: ReadonlyArray<WorkingDirectoryFileChange>): Promise<void> {
+export async function stageFiles(
+  repository: Repository,
+  files: ReadonlyArray<WorkingDirectoryFileChange>
+): Promise<void> {
   const normal = []
   const oldRenamed = []
   const partial = []
@@ -107,7 +113,7 @@ export async function stageFiles(repositoryPath: RepositoryPath, files: Readonly
   for (const file of files) {
     if (file.selection.getSelectionType() === DiffSelectionType.All) {
       normal.push(file.path)
-      if (file.status === FileStatus.Renamed && file.oldPath) {
+      if (file.status === AppFileStatus.Renamed && file.oldPath) {
         oldRenamed.push(file.oldPath)
       }
     } else {
@@ -134,20 +140,20 @@ export async function stageFiles(repositoryPath: RepositoryPath, files: Readonly
   // want to add the new 'foo', we just want to recreate the move in the
   // index. We do this by forcefully removing the old path from the index
   // and then later (in step 2) stage the new file.
-  await updateIndex(repositoryPath, oldRenamed, { forceRemove: true })
+  await updateIndex(repository, oldRenamed, { forceRemove: true })
 
   // In the second step we update the index to match
   // the working directory in the case of new, modified, deleted,
   // and copied files as well as the destination paths for renamed
   // paths.
-  await updateIndex(repositoryPath, normal)
+  await updateIndex(repository, normal)
 
   // Finally we run through all files that have partial selections.
   // We don't care about renamed or not here since applyPatchToIndex
   // has logic to support that scenario.
   if (partial.length) {
     for (const file of partial) {
-      await applyPatchToIndex(repositoryPath, file)
+      await applyPatchToIndex(repository, file)
     }
   }
 }

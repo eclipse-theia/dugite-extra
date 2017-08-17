@@ -1,9 +1,10 @@
 import * as path from 'path'
+// import { findGit } from './git-locator';
 import { GitProcess, IGitResult as DugiteResult, GitError as DugiteError, IGitExecutionOptions as DugiteExecutionOptions } from 'dugite'
-import { Account } from '../model/account';
 
 const __WIN32__: boolean = require('check-if-windows');
 const __DARWIN__: boolean = require('is-osx');
+// const __GIT_PATH__: { path: string | undefined, searched: boolean } = { path: undefined, searched: false };
 
 /**
  * An extension of the execution options in dugite that
@@ -16,13 +17,13 @@ export interface IGitExecutionOptions extends DugiteExecutionOptions {
      * caller. Unexpected exit codes will be logged and an
      * error thrown. Defaults to 0 if undefined.
      */
-    readonly successExitCodes?: Set<number>
+    readonly successExitCodes?: ReadonlySet<number>
 
     /**
      * The git errors which are expected by the caller. Unexpected errors will
      * be logged and an error thrown.
      */
-    readonly expectedErrors?: Set<DugiteError>
+    readonly expectedErrors?: ReadonlySet<DugiteError>
 }
 
 /**
@@ -93,10 +94,17 @@ export class GitError extends Error {
  */
 export async function git(args: string[], path: string, name: string, options?: IGitExecutionOptions): Promise<IGitResult> {
 
-    const defaultOptions: IGitExecutionOptions = {
+    let defaultOptions: IGitExecutionOptions = {
         successExitCodes: new Set([0]),
         expectedErrors: new Set(),
     }
+
+    // https://github.com/desktop/dugite/issues/111
+    // if (!process.env.LOCAL_GIT_DIRECTORY && !__GIT_PATH__.searched) {
+    //     const gitPathAndVersion = await findGit(undefined);
+    //     process.env.LOCAL_GIT_DIRECTORY = gitPathAndVersion ? gitPathAndVersion.path : undefined;
+    //     __GIT_PATH__.searched = true;
+    // }
 
     const opts = { ...defaultOptions, ...options }
     const result = await GitProcess.exec(args, path, options);
@@ -209,7 +217,7 @@ export const gitNetworkArguments: ReadonlyArray<string> = [
 ]
 
 /** Get the environment for authenticating remote operations. */
-export function envForAuthentication(account: Account | undefined): Object {
+export function envForAuthentication(account: IGitAccount | null | undefined): Object {
     const env = {
         'DESKTOP_PATH': process.execPath,
         'DESKTOP_ASKPASS_SCRIPT': getAskPassScriptPath(),
@@ -228,6 +236,25 @@ export function envForAuthentication(account: Account | undefined): Object {
         'DESKTOP_ENDPOINT': account.endpoint,
     })
 }
+/** The set of errors which fit under the "authentication failed" umbrella. */
+export const AuthenticationErrors: ReadonlySet<DugiteError> = new Set([
+    DugiteError.HTTPSAuthenticationFailed,
+    DugiteError.SSHAuthenticationFailed,
+    DugiteError.HTTPSRepositoryNotFound,
+    DugiteError.SSHRepositoryNotFound,
+])
+
+/**
+ * An account which can be used to potentially authenticate with a git server.
+ */
+export interface IGitAccount {
+    /** The login/username to authenticate with. */
+    readonly login: string
+
+    /** The endpoint with which the user is authenticating. */
+    readonly endpoint: string
+}
+
 
 export function expectedAuthenticationErrors(): Set<DugiteError> {
     return new Set([

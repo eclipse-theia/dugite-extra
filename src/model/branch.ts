@@ -1,78 +1,75 @@
 import { Commit } from './commit'
-import { removeRemotePrefix } from '../util/api'
+import { removeRemotePrefix } from '../core/api'
 
-/**
- * The branch type.
- *
- * NOTE: The values here matter as they are used to sort local and remote branches, Local should come before Remote.
- */
+// NOTE: The values here matter as they are used to sort
+// local and remote branches, Local should come before Remote
 export enum BranchType {
-    Local = 0,
-    Remote = 1
+  Local = 0,
+  Remote = 1,
 }
 
-/**
- * A branch as loaded from Git.
- */
-export interface Branch {
+/** A branch as loaded from Git. */
+export class Branch {
+  /** The short name of the branch. E.g., `master`. */
+  public readonly name: string
 
-    /**
-     * The short name of the branch. E.g., `master`.
-     */
-    readonly name: string;
+  /** The remote-prefixed upstream name. E.g., `origin/master`. */
+  public readonly upstream: string | null
 
-    /**
-     * The remote-prefixed upstream name. E.g., `origin/master`.
-     */
-    readonly upstream?: string;
+  /** The type of branch, e.g., local or remote. */
+  public readonly type: BranchType
 
-    /**
-     * The type of branch, e.g., local or remote.
-     */
-    readonly type: BranchType
+  /** The commit associated with this branch */
+  public readonly tip: Commit
 
-    /**
-     * The commit associated with this branch.
-     */
-    readonly tip: Commit
-}
+  public constructor(
+    name: string,
+    upstream: string | null,
+    tip: Commit,
+    type: BranchType
+  ) {
+    this.name = name
+    this.upstream = upstream
+    this.tip = tip
+    this.type = type
+  }
 
-export namespace Branch {
-
-    /**
-     * The name of the upstream's remote.
-     */
-    export function remote(branch: Branch): string | undefined {
-        const upstream = branch.upstream
-        if (!upstream) { return undefined }
-
-        const pieces = upstream.match(/(.*?)\/.*/)
-        if (!pieces || pieces.length < 2) { return undefined }
-
-        return pieces[1]
+  /** The name of the upstream's remote. */
+  public get remote(): string | null {
+    const upstream = this.upstream
+    if (!upstream) {
+      return null
     }
 
-    /**
-     * The name of the branch's upstream without the remote prefix.
-     */
-    export function upstreamWithoutRemote(branch: Branch): string | undefined {
-        if (branch.upstream) {
-            return removeRemotePrefix(branch.upstream);
-        }
-        return undefined;
+    const pieces = upstream.match(/(.*?)\/.*/)
+    if (!pieces || pieces.length < 2) {
+      return null
     }
 
-    /**
-     * The name of the branch without the remote prefix. If the branch is a local
-     * branch, this is the same as its `name`.
-     */
-    export function nameWithoutRemote(branch: Branch): string {
-        if (branch.type === BranchType.Local) {
-            return branch.name;
-        } else {
-            const withoutRemote = removeRemotePrefix(branch.name);
-            return withoutRemote || branch.name;
-        }
+    return pieces[1]
+  }
+
+  /**
+   * The name of the branch's upstream without the remote prefix.
+   */
+  public get upstreamWithoutRemote(): string | undefined {
+    if (!this.upstream) {
+      return undefined
     }
 
+    return removeRemotePrefix(this.upstream)
+  }
+
+  /**
+   * The name of the branch without the remote prefix. If the branch is a local
+   * branch, this is the same as its `name`.
+   */
+  public get nameWithoutRemote(): string {
+    if (this.type === BranchType.Local) {
+      return this.name
+    } else {
+      const withoutRemote = removeRemotePrefix(this.name)
+      return withoutRemote || this.name
+    }
+  }
 }

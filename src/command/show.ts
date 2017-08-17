@@ -1,5 +1,5 @@
 import { ChildProcess } from 'child_process'
-import { git } from '../util/git'
+import { git } from '../core/git'
 import { RepositoryPath } from '../model/repository'
 
 /**

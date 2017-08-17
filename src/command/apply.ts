@@ -1,9 +1,9 @@
-import { git } from '../util/git'
-import { FileStatus, WorkingDirectoryFileChange } from '../model/status'
+import { git } from '../core/git'
+import { AppFileStatus, WorkingDirectoryFileChange } from '../model/status'
 import { DiffType } from '../model/diff'
 import { RepositoryPath } from '../model/repository'
 import { getWorkingDirectoryDiff } from './diff'
-import { formatPatch } from '../util/patch-formatter'
+import { formatPatch } from '../parser/patch-formatter'
 
 export async function applyPatchToIndex(repositoryPath: RepositoryPath, file: WorkingDirectoryFileChange): Promise<void> {
 
@@ -11,7 +11,7 @@ export async function applyPatchToIndex(repositoryPath: RepositoryPath, file: Wo
     // If the file was a rename we have to recreate that rename since we've
     // just blown away the index. Think of this block of weird looking commands
     // as running `git mv`.
-    if (file.status === FileStatus.Renamed && file.oldPath) {
+    if (file.status === AppFileStatus.Renamed && file.oldPath) {
         // Make sure the index knows of the removed file. We could use
         // update-index --force-remove here but we're not since it's
         // possible that someone staged a rename and then recreated the

@@ -1,18 +1,20 @@
-import { git, envForAuthentication, expectedAuthenticationErrors, IGitExecutionOptions, gitNetworkArguments } from '../util/git'
-import { RepositoryPath } from '../model/repository'
-import { Account } from '../model/account'
+import { git, IGitExecutionOptions, gitNetworkArguments, GitError } from '../core/git'
+import { Repository } from '../model/repository'
 import { IPushProgress, PushProgressParser, executionOptionsWithProgress } from '../progress'
+import { IGitAccount, envForAuthentication, AuthenticationErrors } from '../core/git'
 
 /**
  * Push from the remote to the branch, optionally setting the upstream.
  *
- * @param repositoryPath - The repository from which to push or its FS path.
+ * @param repository - The repository from which to push
  *
  * @param account - The account to use when authenticating with the remote
  *
  * @param remote - The remote to push the specified branch to
  *
- * @param branch - The branch to push
+ * @param localBranch - The local branch to push
+ *
+ * @param remoteBranch - The remote branch to push to
  *
  * @param setUpstream - Whether or not to update the tracking information
  *                      of the specified branch to point to the remote.
@@ -23,44 +25,67 @@ import { IPushProgress, PushProgressParser, executionOptionsWithProgress } from 
  *                           the '--progress' command line flag for
  *                           'git push'.
  */
-export async function push(repositoryPath: RepositoryPath, account: Account | undefined,
-  remote: string, branch: string, setUpstream: boolean, progressCallback?: (progress: IPushProgress) => void): Promise<void> {
-
+export async function push(
+  repository: Repository,
+  account: IGitAccount | null,
+  remote: string,
+  localBranch: string,
+  remoteBranch: string | null,
+  progressCallback?: (progress: IPushProgress) => void
+): Promise<void> {
   const args = [
     ...gitNetworkArguments,
-    'push', remote, branch,
-  ];
+    'push',
+    remote,
+    remoteBranch ? `${localBranch}:${remoteBranch}` : localBranch,
+  ]
 
-  if (setUpstream) {
-    args.push('--set-upstream');
+  if (!remoteBranch) {
+    args.push('--set-upstream')
   }
 
   let opts: IGitExecutionOptions = {
     env: envForAuthentication(account),
-    expectedErrors: expectedAuthenticationErrors(),
-  };
-
-  if (progressCallback) {
-    args.push('--progress');
-    const title = `Pushing to ${remote}`;
-    const kind = 'push';
-
-    opts = executionOptionsWithProgress(opts, new PushProgressParser(), (progress) => {
-      const description = progress.kind === 'progress'
-        ? progress.details.text
-        : progress.text;
-      const value = progress.percent;
-
-      progressCallback({ kind, title, description, value, remote, branch });
-    })
-
-    // Initial progress
-    progressCallback({ kind: 'push', title, value: 0, remote, branch });
+    expectedErrors: AuthenticationErrors,
   }
 
-  const result = await git(args, RepositoryPath.getPath(repositoryPath), 'push', opts);
+  if (progressCallback) {
+    args.push('--progress')
+    const title = `Pushing to ${remote}`
+    const kind = 'push'
+
+    opts = executionOptionsWithProgress(
+      opts,
+      new PushProgressParser(),
+      progress => {
+        const description =
+          progress.kind === 'progress' ? progress.details.text : progress.text
+        const value = progress.percent
+
+        progressCallback({
+          kind,
+          title,
+          description,
+          value,
+          remote,
+          branch: localBranch,
+        })
+      }
+    )
+
+    // Initial progress
+    progressCallback({
+      kind: 'push',
+      title,
+      value: 0,
+      remote,
+      branch: localBranch,
+    })
+  }
+
+  const result = await git(args, repository.path, 'push', opts)
 
   if (result.gitErrorDescription) {
-    throw new Error(result.gitErrorDescription);
+    throw new GitError(result, args)
   }
 }

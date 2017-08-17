@@ -1,5 +1,5 @@
 import { Email } from './email'
-import { getDotComAPIEndpoint } from '../util/api'
+import { getDotComAPIEndpoint } from '../core/api'
 
 /**
  * A GitHub account, representing the user found on GitHub or GitHub Enterprise.

@@ -1,35 +1,44 @@
-import { git, GitError } from '../util/git'
+import { git, GitError } from '../core/git'
 import { stageFiles } from './update-index'
-import { RepositoryPath } from '../model/repository'
+import { Repository } from '../model/repository'
 import { WorkingDirectoryFileChange } from '../model/status'
 import { unstageAll } from './reset'
 
-export async function createCommit(repositoryPath: RepositoryPath, message: string, files: ReadonlyArray<WorkingDirectoryFileChange>): Promise<boolean> {
-    // Clear the staging area, our diffs reflect the difference between the
-    // working directory and the last commit (if any) so our commits should
-    // do the same thing.
-    await unstageAll(repositoryPath);
-    await stageFiles(repositoryPath, files);
+export async function createCommit(
+  repository: Repository,
+  message: string,
+  files: ReadonlyArray<WorkingDirectoryFileChange>
+): Promise<boolean> {
+  // Clear the staging area, our diffs reflect the difference between the
+  // working directory and the last commit (if any) so our commits should
+  // do the same thing.
+  await unstageAll(repository)
 
-    try {
-        await git(['commit', '-F', '-'], RepositoryPath.getPath(repositoryPath), 'createCommit', { stdin: message });
-        return true;
-    } catch (e) {
-        // Commit failures could come from a pre-commit hook rejection. So display
-        // a bit more context than we otherwise would.
-        if (e instanceof GitError) {
-            const output = e.result.stderr.trim();
+  await stageFiles(repository, files)
 
-            let standardError = '';
-            if (output.length > 0) {
-                standardError = `, with output: '${output}'`;
-            }
-            const exitCode = e.result.exitCode;
-            const error = new Error(`Commit failed - exit code ${exitCode} received${standardError}`);
-            error.name = 'commit-failed';
-            throw error;
-        } else {
-            throw e;
-        }
+  try {
+    await git(['commit', '-F', '-'], repository.path, 'createCommit', {
+      stdin: message,
+    })
+    return true
+  } catch (e) {
+    // Commit failures could come from a pre-commit hook rejection. So display
+    // a bit more context than we otherwise would.
+    if (e instanceof GitError) {
+      const output = e.result.stderr.trim()
+
+      let standardError = ''
+      if (output.length > 0) {
+        standardError = `, with output: '${output}'`
+      }
+      const exitCode = e.result.exitCode
+      const error = new Error(
+        `Commit failed - exit code ${exitCode} received${standardError}`
+      )
+      error.name = 'commit-failed'
+      throw error
+    } else {
+      throw e
     }
+  }
 }

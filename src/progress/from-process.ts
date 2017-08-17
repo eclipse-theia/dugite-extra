@@ -1,6 +1,6 @@
 import { ChildProcess } from 'child_process'
 import { GitProgressParser, IGitProgress, IGitOutput } from './git'
-import { IGitExecutionOptions } from '../util/git';
+import { IGitExecutionOptions } from '../core/git';
 
 const byline = require('byline')
 

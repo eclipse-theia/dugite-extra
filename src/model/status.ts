@@ -1,5 +1,84 @@
 import { DiffSelection } from './diff';
 
+/** The porcelain status for an ordinary changed entry */
+export type OrdinaryEntry = {
+    readonly kind: 'ordinary'
+    /** how we should represent the file in the application */
+    readonly type: 'added' | 'modified' | 'deleted'
+    /** the status of the index for this entry (if known) */
+    readonly index?: GitStatusEntry
+    /** the status of the working tree for this entry (if known) */
+    readonly workingTree?: GitStatusEntry
+}
+
+/** The porcelain status for a renamed or copied entry */
+export type RenamedOrCopiedEntry = {
+    readonly kind: 'renamed' | 'copied'
+    /** the status of the index for this entry (if known) */
+    readonly index?: GitStatusEntry
+    /** the status of the working tree for this entry (if known) */
+    readonly workingTree?: GitStatusEntry
+}
+
+/** The porcelain status for an unmerged entry */
+export type UnmergedEntry = {
+    readonly kind: 'conflicted'
+    /** the first character of the short code ("ours")  */
+    readonly us: GitStatusEntry
+    /** the second character of the short code ("theirs")  */
+    readonly them: GitStatusEntry
+}
+
+/** The porcelain status for an unmerged entry */
+export type UntrackedEntry = {
+    readonly kind: 'untracked'
+}
+
+/** The union of possible entries from the git status */
+export type FileEntry =
+    | OrdinaryEntry
+    | RenamedOrCopiedEntry
+    | UnmergedEntry
+    | UntrackedEntry
+
+/**
+ * The status entry code as reported by Git.
+ */
+export enum GitStatusEntry {
+    // M
+    Modified,
+    // A
+    Added,
+    // D
+    Deleted,
+    // R
+    Renamed,
+    // C
+    Copied,
+    // .
+    Unchanged,
+    // ?
+    Untracked,
+    // !
+    Ignored,
+    // U
+    //
+    // While U is a valid code here, we currently mark conflicts as "Modified"
+    // in the application - this will likely be something we need to revisit
+    // down the track as we improve our merge conflict experience
+    UpdatedButUnmerged,
+}
+
+/** The file status as represented in GitHub Desktop. */
+export enum AppFileStatus {
+    New,
+    Modified,
+    Deleted,
+    Copied,
+    Renamed,
+    Conflicted,
+}
+
 /**
  * The encapsulation of the result from `git status`.
  */
@@ -53,7 +132,7 @@ export class FileChange {
      * @param status The original path in the case of a renamed file.
      * @param oldPath The status of the change to the file.
      */
-    public constructor(public readonly path: string, public readonly status: FileStatus, public readonly oldPath?: string) {
+    public constructor(public readonly path: string, public readonly status: AppFileStatus, public readonly oldPath?: string, public readonly staged: boolean = true) {
     }
 
     /** An ID for the file change. */
@@ -73,8 +152,8 @@ export class WorkingDirectoryFileChange extends FileChange {
      * @param selection contains the selection details for this file - all, nothing or partial.
      * @param oldPath The status of the change to the file.
      */
-    public constructor(path: string, status: FileStatus, public readonly selection: DiffSelection, oldPath?: string) {
-        super(path, status, oldPath);
+    public constructor(path: string, status: AppFileStatus, public readonly selection: DiffSelection, oldPath?: string, staged: boolean = true) {
+        super(path, status, oldPath, staged);
     }
 
     /**
