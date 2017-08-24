@@ -6,11 +6,11 @@
   "scripts": {
     "build": "tsc",
     "test": "mocha --opts ./mocha.opts src/**/*.spec.ts",
-    "test:localGit": "USE_LOCAL_GIT=true mocha --opts ./mocha.opts src/**/*.spec.ts",
+    "test:localGit": "cross-env USE_LOCAL_GIT=true mocha --opts ./mocha.opts src/**/*.spec.ts",
     "clean": "rimraf ./lib",
     "build:watch": "tsc -w",
     "test:watch": "mocha -w --opts ./mocha.opts src/**/*.spec.ts",
-    "test:watch:localGit": "USE_LOCAL_GIT=true mocha -w --opts ./mocha.opts src/**/*.spec.ts",
+    "test:watch:localGit": "cross-env USE_LOCAL_GIT=true mocha -w --opts ./mocha.opts src/**/*.spec.ts",
     "clean:all": "rimraf ./lib && rimraf ./node_modules"
   },
   "repository": {
@@ -51,6 +51,7 @@
     "@types/node": "^7.0.22",
     "@types/temp": "^0.8.29",
     "chai": "^4.0.0",
+    "cross-env": "^5.0.5",
     "fs-extra": "^4.0.1",
     "klaw-sync": "^3.0.0",
     "mocha": "^3.4.2",
