@@ -1,0 +1,19 @@
+language: node_js
+
+node_js:
+- '7'
+- '6'
+- '8'
+
+git:
+  depth: 1
+
+branches:
+  only:
+  - master
+
+install:
+  npm i
+
+script:
+  npm run build && npm run test && npm run test:localGit

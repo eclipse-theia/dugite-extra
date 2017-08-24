@@ -1,0 +1,11 @@
+shallow_clone: true
+
+branches:
+  only:
+  - master
+
+platform:
+  - x64
+
+build_script:
+  - npm i && npm run build && npm run test && npm run test:localGit
