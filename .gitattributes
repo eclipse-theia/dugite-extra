@@ -1,1 +1,2 @@
-/resources/*   text eol=lf
+* text=auto
+/resources/* text eol=lf
