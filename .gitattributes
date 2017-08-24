@@ -1,2 +1,2 @@
 * text=auto
-/resources/* text eol=lf
+/resources/fixtures/* -text
