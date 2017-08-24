@@ -1,10 +1,11 @@
+import * as fs from 'fs';
 import * as path from 'path'
-// import { findGit } from './git-locator';
+import { findGit } from './git-locator';
 import { GitProcess, IGitResult as DugiteResult, GitError as DugiteError, IGitExecutionOptions as DugiteExecutionOptions } from 'dugite'
 
 const __WIN32__: boolean = require('check-if-windows');
 const __DARWIN__: boolean = require('is-osx');
-// const __GIT_PATH__: { path: string | undefined, searched: boolean } = { path: undefined, searched: false };
+const __GIT_DIR_PATH__: { path: string | undefined, searched: boolean } = { path: undefined, searched: false };
 
 /**
  * An extension of the execution options in dugite that
@@ -99,12 +100,11 @@ export async function git(args: string[], path: string, name: string, options?: 
         expectedErrors: new Set(),
     }
 
-    // https://github.com/desktop/dugite/issues/111
-    // if (!process.env.LOCAL_GIT_DIRECTORY && !__GIT_PATH__.searched) {
-    //     const gitPathAndVersion = await findGit(undefined);
-    //     process.env.LOCAL_GIT_DIRECTORY = gitPathAndVersion ? gitPathAndVersion.path : undefined;
-    //     __GIT_PATH__.searched = true;
-    // }
+    if (process.env.USE_LOCAL_GIT === 'true' && !process.env.LOCAL_GIT_DIRECTORY && !__GIT_DIR_PATH__.searched) {
+        console.log(`'USE_LOCAL_GIT' is set to true. Trying to use local Git for 'dugite' execution.`);
+        process.env.LOCAL_GIT_DIRECTORY = await getGitDirPath();
+        __GIT_DIR_PATH__.searched = true;
+    }
 
     const opts = { ...defaultOptions, ...options }
     const result = await GitProcess.exec(args, path, options);
@@ -145,6 +145,35 @@ export async function git(args: string[], path: string, name: string, options?: 
     }
 
     throw new GitError(gitResult, args)
+}
+
+async function getGitDirPath(): Promise<string | undefined> {
+    const gitPathAndVersion = await findGit(undefined);
+    if (gitPathAndVersion && gitPathAndVersion.path) {
+        const segments = await splitPath(gitPathAndVersion.path);
+        // We need to traverse up two levels to get the expected Git directory.
+        // https://github.com/desktop/dugite/issues/111
+        const path = segments.slice(0, segments.length - 4).join('');
+        if (fs.existsSync(path)) {
+            console.log('Git executable was successfully located.');
+            console.info(`Caching Git executable location: ${gitPathAndVersion.path}. (${gitPathAndVersion.version})`);
+            return path;
+        } else {
+            console.warn(`Unable to locate Git executable Git does not exist under: ${gitPathAndVersion.path}. Falling back to the 'dugite' one.`);
+            return undefined;
+        }
+    }
+    console.warn(`Unable to locate Git executable. Falling back to the 'dugite' one.`);
+    return undefined;
+}
+
+async function splitPath(path: string): Promise<string[]> {
+    const parts = path.split(/(\/|\\)/);
+    if (!parts.length) {
+        return parts;
+    }
+    // When the `path` starts with a slash, the the first part is empty string.
+    return !parts[0].length ? parts.slice(1) : parts;
 }
 
 function getDescriptionForError(error: DugiteError): string {

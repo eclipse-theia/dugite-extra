@@ -6,9 +6,11 @@
   "scripts": {
     "build": "tsc",
     "test": "mocha --opts ./mocha.opts src/**/*.spec.ts",
+    "test:localGit": "USE_LOCAL_GIT=true mocha --opts ./mocha.opts src/**/*.spec.ts",
     "clean": "rimraf ./lib",
     "build:watch": "tsc -w",
     "test:watch": "mocha -w --opts ./mocha.opts src/**/*.spec.ts",
+    "test:watch:localGit": "USE_LOCAL_GIT=true mocha -w --opts ./mocha.opts src/**/*.spec.ts",
     "clean:all": "rimraf ./lib && rimraf ./node_modules"
   },
   "repository": {
