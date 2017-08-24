@@ -14,6 +14,12 @@ export async function initRepository(path: string, add?: boolean, commit?: boole
     if ((await git(['init'], path, 'init')).exitCode !== 0) {
         throw new Error(`Error while initializing a repository under ${path}.`);
     }
+    if ((await git(['config', 'user.email', '"jon@doe.com"'], path, 'config')).exitCode !== 0) {
+        throw new Error(`Error while setting user email to the Git configuration.`);
+    }
+    if ((await git(['config', 'user.name', '"Jon Doe"'], path, 'config')).exitCode !== 0) {
+        throw new Error(`Error while setting user name to the Git configuration.`);
+    }
     if (add) {
         if ((await git(['add', '.'], path, 'add')).exitCode !== 0) {
             throw new Error(`Error while staging changes into the repository.`);
