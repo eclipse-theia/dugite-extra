@@ -2,28 +2,23 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import { git } from '../core/git';
 import { RepositoryPath } from '../model/repository';
-const jsodDir = require('jsondir');
 
 /**
  * Initializes a new Git repository to the destination folder. On demand, creates the desired folder structure and commits the changes.
  *
  * @param path the desired destination folder for the new Git repository.
- * @param directoryGraph a JSON object that describes the desired Git repository structure. For more details check: https://github.com/dwieeb/node-jsondir#simple-examples
+ * @param add `true` if all the repository content has to be added to the index.
  * @param commit `true` if the directory structure has to be committed.
  */
-export async function initRepository(path: string, directoryGraph?: object, commit?: boolean): Promise<string> {
+export async function initRepository(path: string, add?: boolean, commit?: boolean): Promise<string> {
     if ((await git(['init'], path, 'init')).exitCode !== 0) {
         throw new Error(`Error while initializing a repository under ${path}.`);
     }
-    if (directoryGraph) {
-        (<any>directoryGraph)['-path'] = path;
-        await new Promise<void>((resolve, reject) => {
-            jsodDir.json2dir(directoryGraph, (error: any) => { error ? reject(error) : resolve() });
-        });
+    if (add) {
+        if ((await git(['add', '.'], path, 'add')).exitCode !== 0) {
+            throw new Error(`Error while staging changes into the repository.`);
+        }
         if (commit) {
-            if ((await git(['add', '.'], path, 'add')).exitCode !== 0) {
-                throw new Error(`Error while staging changes into the repository.`);
-            }
             if ((await git(['commit', '-F', '-'], path, 'createCommit', { stdin: 'Initial commit.' })).exitCode !== 0) {
                 throw new Error(`Error while committing changes into the repository`);
             }
@@ -32,18 +27,13 @@ export async function initRepository(path: string, directoryGraph?: object, comm
     return path;
 }
 
-export const TEST_REPOSITORY_01 = {
-    "A.txt": {
-        "-content": 'A'
-    },
-    "B.txt": {
-        "-content": 'B'
-    },
-    "folder": {
-        "C.txt": {
-            "-content": 'C'
-        }
-    }
+export async function createTestRepository(root: string): Promise<string> {
+    fs.mkdirSync(path.join(root, 'folder'));
+    fs.writeFileSync(path.join(root, 'A.txt'), 'A', { encoding: 'utf8' });
+    fs.writeFileSync(path.join(root, 'B.txt'), 'B', { encoding: 'utf8' });
+    fs.writeFileSync(path.join(root, 'folder', 'C.txt'), 'C', { encoding: 'utf8' });
+    await initRepository(root, true, true);
+    return root;
 }
 
 export function remove(repositoryPath: string | RepositoryPath, filesToDelete: string | string[]): string[] {

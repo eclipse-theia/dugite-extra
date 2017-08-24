@@ -3,7 +3,7 @@ import * as path from 'path';
 import { expect } from 'chai';
 import { getStatus } from './status';
 import { FileStatus } from '../model/status';
-import { initRepository, add, remove, modify, TEST_REPOSITORY_01 } from './test-helper';
+import { createTestRepository, add, remove, modify } from './test-helper';
 
 
 const track = temp.track();
@@ -24,14 +24,14 @@ describe('status', async () => {
     });
 
     it('empty', async () => {
-        const repositoryPath = await createRepository();
+        const repositoryPath = await createTestRepository(track.mkdirSync());
         const status = await getStatus({ path: repositoryPath });
 
         expect(status.workingDirectory.files).to.be.empty;
     });
 
     it('new', async () => {
-        const repositoryPath = await createRepository();
+        const repositoryPath = await createTestRepository(track.mkdirSync());
         const filePaths = add(repositoryPath, { path: 'X.txt' })
 
         const status = await getStatus({ path: repositoryPath });
@@ -42,7 +42,7 @@ describe('status', async () => {
     });
 
     it('deleted', async () => {
-        const repositoryPath = await createRepository();
+        const repositoryPath = await createTestRepository(track.mkdirSync());
         const filePaths = remove(repositoryPath, 'A.txt');
 
         const status = await getStatus({ path: repositoryPath });
@@ -53,7 +53,7 @@ describe('status', async () => {
     });
 
     it('modified', async () => {
-        const repositoryPath = await createRepository();
+        const repositoryPath = await createTestRepository(track.mkdirSync());
         const filePaths = modify(repositoryPath, { path: 'A.txt', data: 'content' });
 
         const status = await getStatus({ path: repositoryPath });
@@ -64,7 +64,3 @@ describe('status', async () => {
     });
 
 });
-
-async function createRepository(name: string = 'test_repository', directoryGraph: object = TEST_REPOSITORY_01, commit: boolean = true): Promise<string> {
-    return initRepository(track.mkdirSync(name), directoryGraph, commit);
-}
