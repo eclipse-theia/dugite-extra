@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import { stage, unstage, getStagedFiles } from './stage';
 import { getStatus } from './status';
 import { FileStatus } from '../model/status';
-import { add, modify, remove, rename, setupRepository } from './test-helper';
+import { add, modify, remove, rename, initRepository, TEST_REPOSITORY_01 } from './test-helper';
 
 const track = temp.track();
 
@@ -26,7 +26,7 @@ describe('stage', async () => {
         });
 
         it('new', async () => {
-            const repositoryPath = setupRepository('repository_01', track.mkdirSync());
+            const repositoryPath = await createRepository();
             const filePaths = add(repositoryPath, { path: 'X.txt' });
 
             const beforeStatus = await getStatus({ path: repositoryPath });
@@ -47,7 +47,7 @@ describe('stage', async () => {
         });
 
         it('deleted', async () => {
-            const repositoryPath = setupRepository('repository_01', track.mkdirSync());
+            const repositoryPath = await createRepository();
             const filePaths = remove(repositoryPath, 'A.txt');
 
             const beforeStatus = await getStatus({ path: repositoryPath });
@@ -67,7 +67,7 @@ describe('stage', async () => {
         });
 
         it('modified', async () => {
-            const repositoryPath = setupRepository('repository_01', track.mkdirSync());
+            const repositoryPath = await createRepository();
             const filePaths = modify(repositoryPath, { path: 'A.txt', data: 'content' });
 
             const beforeStatus = await getStatus({ path: repositoryPath });
@@ -99,7 +99,7 @@ describe('stage', async () => {
         });
 
         it('new/deleted/modified', async () => {
-            const repositoryPath = setupRepository('repository_01', track.mkdirSync());
+            const repositoryPath = await createRepository();
             const toStage = [
                 ...add(repositoryPath, { path: 'X.txt', data: 'X' }),
                 ...remove(repositoryPath, 'A.txt'),
@@ -122,3 +122,7 @@ describe('stage', async () => {
     });
 
 });
+
+async function createRepository(name: string = 'test_repository', directoryGraph: object = TEST_REPOSITORY_01, commit: boolean = true): Promise<string> {
+    return initRepository(track.mkdirSync(name), directoryGraph, commit);
+}

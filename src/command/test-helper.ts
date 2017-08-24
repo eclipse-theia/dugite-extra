@@ -1,60 +1,49 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import { git, IGitResult } from '../core/git';
+import { git } from '../core/git';
 import { RepositoryPath } from '../model/repository';
-
-const sync = require('klaw-sync');
-type Entry = { path: string };
-
-const defaultFixturesPath = path.join(__dirname, '..', '..', 'resources', 'fixtures');
+const jsodDir = require('jsondir');
 
 /**
- * Initializes a new Git repository to the destination folder.
+ * Initializes a new Git repository to the destination folder. On demand, creates the desired folder structure and commits the changes.
+ *
  * @param path the desired destination folder for the new Git repository.
+ * @param directoryGraph a JSON object that describes the desired Git repository structure. For more details check: https://github.com/dwieeb/node-jsondir#simple-examples
+ * @param commit `true` if the directory structure has to be committed.
  */
-export async function initRepository(path: string): Promise<IGitResult> {
-    return git(['init'], path, 'init');
+export async function initRepository(path: string, directoryGraph?: object, commit?: boolean): Promise<string> {
+    if ((await git(['init'], path, 'init')).exitCode !== 0) {
+        throw new Error(`Error while initializing a repository under ${path}.`);
+    }
+    if (directoryGraph) {
+        (<any>directoryGraph)['-path'] = path;
+        await new Promise<void>((resolve, reject) => {
+            jsodDir.json2dir(directoryGraph, (error: any) => { error ? reject(error) : resolve() });
+        });
+        if (commit) {
+            if ((await git(['add', '.'], path, 'add')).exitCode !== 0) {
+                throw new Error(`Error while staging changes into the repository.`);
+            }
+            if ((await git(['commit', '-F', '-'], path, 'createCommit', { stdin: 'Initial commit.' })).exitCode !== 0) {
+                throw new Error(`Error while committing changes into the repository`);
+            }
+        }
+    }
+    return path;
 }
 
-/**
- * Creates a new Git fixture repository for testing. Returns with the path to the test repository.
- *
- * @param repositoryName the name of the Git repository from `test-resources/fixtures` to setup for testing.
- * @param destinationPath the destination FS path where the repository will be created.
- * @param fixturesPath the the FS path to the fixtures folder. If not given, the `../../resources/fixtures`.
- */
-export function setupRepository(repositoryName: string, destinationRoot: string, fixturesPath?: string): string {
-    const repositoryPath = path.join(fixturesPath || defaultFixturesPath, repositoryName);
-    if (!fs.existsSync(repositoryPath)) {
-        throw new Error(`No fixture repository exists under '${fixturesPath}' with name '${repositoryName}'.`);
+export const TEST_REPOSITORY_01 = {
+    "A.txt": {
+        "-content": 'A'
+    },
+    "B.txt": {
+        "-content": 'B'
+    },
+    "folder": {
+        "C.txt": {
+            "-content": 'C'
+        }
     }
-
-    const destinationPath = path.join(destinationRoot, repositoryName);
-    fs.mkdirpSync(destinationPath);
-    fs.copySync(repositoryPath, destinationPath);
-    fs.renameSync(
-        path.join(destinationPath, '_git'),
-        path.join(destinationPath, '.git')
-    );
-
-    const ignoreHiddenFiles = (item: Entry) => {
-        const basename = path.basename(item.path);
-        return basename === '.' || basename[0] !== '.';
-    };
-
-    const entries: ReadonlyArray<Entry> = sync(destinationPath);
-    const visiblePaths = entries.filter(ignoreHiddenFiles);
-    const subModules = visiblePaths.filter(
-        entry => path.basename(entry.path) === '_git'
-    );
-
-    subModules.forEach(entry => {
-        const directory = path.dirname(entry.path);
-        const newPath = path.join(directory, '.git');
-        fs.renameSync(entry.path, newPath);
-    });
-
-    return destinationPath;
 }
 
 export function remove(repositoryPath: string | RepositoryPath, filesToDelete: string | string[]): string[] {
