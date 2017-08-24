@@ -12,6 +12,10 @@ branches:
   only:
   - master
 
+env:
+  global:
+  - CXX=g++-4.8
+
 install:
   npm i
 
