@@ -1,2 +1,2 @@
-* text=auto
-/resources/fixtures/* -text -diff
+* text=lf
+/resources/fixtures/* binary
