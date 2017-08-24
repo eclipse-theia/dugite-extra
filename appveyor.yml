@@ -1,5 +1,14 @@
 shallow_clone: true
 
+environment:
+  matrix:
+    - nodejs_version: "6"
+    - nodejs_version: "7"
+    - nodejs_version: "8"
+
+cache:
+  - node_modules
+
 branches:
   only:
   - master
@@ -7,5 +16,12 @@ branches:
 platform:
   - x64
 
+install:
+  - ps: Install-Product node $env:nodejs_version $env:platform
+  - npm i
+
 build_script:
-  - npm i && npm run build && npm run test && npm run test:localGit
+  - npm run build
+
+test_script:
+  - npm run test && npm run test:localGit
