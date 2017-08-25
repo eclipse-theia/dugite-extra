@@ -42,6 +42,10 @@ export async function createTestRepository(root: string): Promise<string> {
     return root;
 }
 
+export async function usesLocalGit(): Promise<boolean> {
+    return process.env.USE_LOCAL_GIT === 'true';
+}
+
 export function remove(repositoryPath: string | RepositoryPath, filesToDelete: string | string[]): string[] {
     const repoPath = typeof repositoryPath === 'string' ? repositoryPath : RepositoryPath.getPath(repositoryPath);
     const files = (Array.isArray(filesToDelete) ? filesToDelete : [filesToDelete]).map(f => path.join(repoPath, f));
