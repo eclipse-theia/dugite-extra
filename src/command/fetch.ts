@@ -1,15 +1,12 @@
-import { git, IGitExecutionOptions, gitNetworkArguments } from '../core/git'
+import { git, IGitExecutionOptions } from '../core/git'
 import { Repository } from '../model/repository'
 import { FetchProgressParser, executionOptionsWithProgress } from '../progress'
 import { IFetchProgress } from '../progress'
-import { IGitAccount, envForAuthentication } from '../core/git'
 
 /**
  * Fetch from the given remote.
  *
  * @param repository - The repository to fetch into
- *
- * @param account    - The account to use when authenticating with the remote
  *
  * @param remote     - The remote to fetch from
  *
@@ -21,13 +18,11 @@ import { IGitAccount, envForAuthentication } from '../core/git'
  */
 export async function fetch(
   repository: Repository,
-  account: IGitAccount | null,
   remote: string,
   progressCallback?: (progress: IFetchProgress) => void
 ): Promise<void> {
   let opts: IGitExecutionOptions = {
     successExitCodes: new Set([0]),
-    env: envForAuthentication(account),
   }
 
   if (progressCallback) {
@@ -61,8 +56,8 @@ export async function fetch(
   }
 
   const args = progressCallback
-    ? [...gitNetworkArguments, 'fetch', '--progress', '--prune', remote]
-    : [...gitNetworkArguments, 'fetch', '--prune', remote]
+    ? ['fetch', '--progress', '--prune', remote]
+    : ['fetch', '--prune', remote]
 
   await git(args, repository.path, 'fetch', opts)
 }
@@ -70,16 +65,14 @@ export async function fetch(
 /** Fetch a given refspec from the given remote. */
 export async function fetchRefspec(
   repository: Repository,
-  account: IGitAccount | null,
   remote: string,
   refspec: string
 ): Promise<void> {
   const options = {
-    successExitCodes: new Set([0, 128]),
-    env: envForAuthentication(account),
+    successExitCodes: new Set([0, 128])
   }
 
-  const args = [...gitNetworkArguments, 'fetch', remote, refspec]
+  const args = ['fetch', remote, refspec]
 
   await git(args, repository.path, 'fetchRefspec', options)
 }

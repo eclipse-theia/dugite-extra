@@ -1,10 +1,7 @@
 import * as fs from 'fs';
-import * as path from 'path'
 import findGit from 'find-git-exec';
 import { GitProcess, IGitResult as DugiteResult, GitError as DugiteError, IGitExecutionOptions as DugiteExecutionOptions } from 'dugite';
 
-const __WIN32__: boolean = require('check-if-windows');
-const __DARWIN__: boolean = require('is-osx');
 const __GIT_PATH__: { gitDir: string | undefined, gitExecPath: string | undefined, searched: boolean } = { gitDir: undefined, gitExecPath: undefined, searched: false };
 
 /**
@@ -200,7 +197,7 @@ function getDescriptionForError(error: DugiteError): string {
         case DugiteError.SSHAuthenticationFailed:
         case DugiteError.SSHPermissionDenied:
         // tslint:disable-next-line:max-line-length
-        case DugiteError.HTTPSAuthenticationFailed: return `Authentication failed. You may not have permission to access the repository. Open ${__DARWIN__ ? 'preferences' : 'options'} and verify that you're signed in with an account that has permission to access this repository.`
+        case DugiteError.HTTPSAuthenticationFailed: return `Authentication failed. You may not have permission to access the repository.`
         case DugiteError.RemoteDisconnection: return 'The remote disconnected. Check your Internet connection and try again.'
         case DugiteError.HostDown: return 'The host is down. Check your Internet connection and try again.'
         case DugiteError.RebaseConflicts: return 'We found some conflicts while trying to rebase. Please resolve the conflicts before continuing.'
@@ -237,77 +234,4 @@ function getDescriptionForError(error: DugiteError): string {
         case DugiteError.InvalidRefLength: return 'A ref cannot be longer than 255 characters.'
         default: throw new Error(`Unknown error: ${error}.`)
     }
-}
-
-function getAskPassTrampolinePath(): string {
-    const extension = __WIN32__ ? 'bat' : 'sh'
-    return path.resolve(__dirname, 'static', `ask-pass-trampoline.${extension}`)
-}
-
-function getAskPassScriptPath(): string {
-    return path.resolve(__dirname, 'ask-pass.js')
-}
-
-/**
- * An array of command line arguments for network operation that unset
- * or hard-code git configuration values that should not be read from
- * local, global, or system level git configs.
- *
- * These arguments should be inserted before the subcommand, i.e in
- * the case of `git pull` these arguments needs to go before the `pull`
- * argument.
- */
-export const gitNetworkArguments: ReadonlyArray<string> = [
-    // Explicitly unset any defined credential helper, we rely on our
-    // own askpass for authentication.
-    '-c', 'credential.helper=',
-]
-
-/** Get the environment for authenticating remote operations. */
-export function envForAuthentication(account: IGitAccount | null | undefined): Object {
-    const env = {
-        'DESKTOP_PATH': process.execPath,
-        'DESKTOP_ASKPASS_SCRIPT': getAskPassScriptPath(),
-        'GIT_ASKPASS': getAskPassTrampolinePath(),
-        // supported since Git 2.3, this is used to ensure we never interactively prompt
-        // for credentials - even as a fallback
-        'GIT_TERMINAL_PROMPT': '0',
-    }
-
-    if (!account) {
-        return env
-    }
-
-    return Object.assign(env, {
-        'DESKTOP_USERNAME': account.login,
-        'DESKTOP_ENDPOINT': account.endpoint,
-    })
-}
-/** The set of errors which fit under the "authentication failed" umbrella. */
-export const AuthenticationErrors: ReadonlySet<DugiteError> = new Set([
-    DugiteError.HTTPSAuthenticationFailed,
-    DugiteError.SSHAuthenticationFailed,
-    DugiteError.HTTPSRepositoryNotFound,
-    DugiteError.SSHRepositoryNotFound,
-])
-
-/**
- * An account which can be used to potentially authenticate with a git server.
- */
-export interface IGitAccount {
-    /** The login/username to authenticate with. */
-    readonly login: string
-
-    /** The endpoint with which the user is authenticating. */
-    readonly endpoint: string
-}
-
-
-export function expectedAuthenticationErrors(): Set<DugiteError> {
-    return new Set([
-        DugiteError.HTTPSAuthenticationFailed,
-        DugiteError.SSHAuthenticationFailed,
-        DugiteError.HTTPSRepositoryNotFound,
-        DugiteError.SSHRepositoryNotFound,
-    ])
 }

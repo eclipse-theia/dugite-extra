@@ -1,7 +1,6 @@
-import { git, IGitExecutionOptions, gitNetworkArguments, GitError } from '../core/git'
+import { git, IGitExecutionOptions, GitError } from '../core/git'
 import { Repository } from '../model/repository'
 import { IPushProgress, PushProgressParser, executionOptionsWithProgress } from '../progress'
-import { IGitAccount, envForAuthentication, AuthenticationErrors } from '../core/git'
 
 /**
  * Push from the remote to the branch, optionally setting the upstream.
@@ -27,14 +26,12 @@ import { IGitAccount, envForAuthentication, AuthenticationErrors } from '../core
  */
 export async function push(
   repository: Repository,
-  account: IGitAccount | null,
   remote: string,
   localBranch: string,
   remoteBranch: string | null,
   progressCallback?: (progress: IPushProgress) => void
 ): Promise<void> {
   const args = [
-    ...gitNetworkArguments,
     'push',
     remote,
     remoteBranch ? `${localBranch}:${remoteBranch}` : localBranch,
@@ -44,10 +41,7 @@ export async function push(
     args.push('--set-upstream')
   }
 
-  let opts: IGitExecutionOptions = {
-    env: envForAuthentication(account),
-    expectedErrors: AuthenticationErrors,
-  }
+  let opts: IGitExecutionOptions = {}
 
   if (progressCallback) {
     args.push('--progress')

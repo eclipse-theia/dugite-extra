@@ -1,8 +1,7 @@
-import { git, GitError, IGitExecutionOptions, gitNetworkArguments } from '../core/git'
+import { git, GitError, IGitExecutionOptions } from '../core/git'
 import { Repository } from '../model/repository'
 import { PullProgressParser, executionOptionsWithProgress } from '../progress'
 import { IPullProgress } from '../progress'
-import { IGitAccount, envForAuthentication, AuthenticationErrors } from '../core/git'
 
 /**
  * Pull from the specified remote.
@@ -19,15 +18,10 @@ import { IGitAccount, envForAuthentication, AuthenticationErrors } from '../core
  */
 export async function pull(
   repository: Repository,
-  account: IGitAccount | null,
   remote: string,
   progressCallback?: (progress: IPullProgress) => void
 ): Promise<void> {
-  let opts: IGitExecutionOptions = {
-    env: envForAuthentication(account),
-    expectedErrors: AuthenticationErrors,
-  }
-
+  let opts: IGitExecutionOptions = {}
   if (progressCallback) {
     const title = `Pulling ${remote}`
     const kind = 'pull'
@@ -60,8 +54,8 @@ export async function pull(
   }
 
   const args = progressCallback
-    ? [...gitNetworkArguments, 'pull', '--no-rebase', '--progress', remote]
-    : [...gitNetworkArguments, 'pull', '--no-rebase', remote]
+    ? ['pull', '--no-rebase', '--progress', remote]
+    : ['pull', '--no-rebase', remote]
 
   const result = await git(args, repository.path, 'pull', opts)
 

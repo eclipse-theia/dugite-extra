@@ -1,7 +1,6 @@
-import { git, gitNetworkArguments } from '../core/git'
+import { git } from '../core/git'
 import { Repository } from '../model/repository'
 import { Branch, BranchType } from '../model/branch'
-import { IGitAccount, envForAuthentication } from '../core/git'
 
 /**
  * Create a new branch from the given start point.
@@ -43,7 +42,6 @@ export async function renameBranch(
 export async function deleteBranch(
   repository: Repository,
   branch: Branch,
-  account: IGitAccount | null,
   includeRemote: boolean
 ): Promise<true> {
   if (branch.type === BranchType.Local) {
@@ -63,23 +61,19 @@ export async function deleteBranch(
   const branchExistsOnRemote = await checkIfBranchExistsOnRemote(
     repository,
     branch,
-    account,
     remote
   )
 
   if (branchExistsOnRemote) {
     const args = [
-      ...gitNetworkArguments,
       'push',
       remote,
       `:${branch.nameWithoutRemote}`,
     ]
 
-    const opts = { env: envForAuthentication(account) }
-
     // If the user is not authenticated, the push is going to fail
     // Let this propagate and leave it to the caller to handle
-    await git(args, repository.path, 'deleteRemoteBranch', opts)
+    await git(args, repository.path, 'deleteRemoteBranch', {})
   }
 
   return true
@@ -88,22 +82,19 @@ export async function deleteBranch(
 async function checkIfBranchExistsOnRemote(
   repository: Repository,
   branch: Branch,
-  account: IGitAccount | null,
   remote: string
 ): Promise<boolean> {
   const args = [
-    ...gitNetworkArguments,
     'ls-remote',
     '--heads',
     remote,
     branch.nameWithoutRemote,
   ]
-  const opts = { env: envForAuthentication(account) }
   const result = await git(
     args,
     repository.path,
     'checkRemoteBranchExistence',
-    opts
+    {}
   )
   return result.stdout.length > 0
 }
