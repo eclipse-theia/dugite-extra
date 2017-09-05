@@ -1,23 +1,14 @@
 import { git, GitError } from '../core/git'
-import { stageFiles } from './update-index'
-import { Repository } from '../model/repository'
-import { WorkingDirectoryFileChange } from '../model/status'
-import { unstageAll } from './reset'
+import { RepositoryPath } from '../model/repository'
 
 export async function createCommit(
-  repository: Repository,
-  message: string,
-  files: ReadonlyArray<WorkingDirectoryFileChange>
+  repository: RepositoryPath,
+  message: string
 ): Promise<boolean> {
-  // Clear the staging area, our diffs reflect the difference between the
-  // working directory and the last commit (if any) so our commits should
-  // do the same thing.
-  await unstageAll(repository)
-
-  await stageFiles(repository, files)
 
   try {
-    await git(['commit', '-F', '-'], repository.path, 'createCommit', {
+    const repositoryPath = RepositoryPath.getPath(repository);
+    await git(['commit', '-F', '-'], repositoryPath, 'createCommit', {
       stdin: message,
     })
     return true

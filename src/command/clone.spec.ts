@@ -20,22 +20,12 @@ describe('clone', async () => {
         }
     });
 
-    it('public https', async function () {
-        this.timeout(40000);
+    it('public https', async () => {
         const repositoryPath = track.mkdirSync();
         await clone('https://github.com/TypeFox/dugite-extra.git', repositoryPath);
         const status = await getStatus({ path: repositoryPath });
 
         expect(status.workingDirectory.files).to.be.empty;
-    });
-
-    it('private https', async function () {
-        // this.timeout(40000);
-        // const repositoryPath = track.mkdirSync();
-        // await clone('git://github.com/Your/private-repository.git', repositoryPath);
-        // const status = await getStatus({ path: repositoryPath });
-
-        // expect(status.workingDirectory.files).to.be.empty;
     });
 
 });
