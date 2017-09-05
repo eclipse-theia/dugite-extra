@@ -6,7 +6,7 @@
   "typings": "lib/index",
   "scripts": {
     "build": "tsc && tslint -c ./tslint.json --project ./tsconfig.json",
-    "test": "npm run test:embedded && npm run test:local",
+    "test": "npm run test:embedded && npm run test:external",
     "test:watch": "concurrently -n embedded,external \"npm run test:embedded:watch\" \"npm run test:external\" ",
     "test:embedded": "mocha --opts ./mocha.opts src/**/*.spec.ts",
     "test:external": "cross-env USE_LOCAL_GIT=true mocha --opts ./mocha.opts src/**/*.spec.ts",
@@ -14,7 +14,6 @@
     "test:external:watch": "cross-env USE_LOCAL_GIT=true mocha -w --opts ./mocha.opts src/**/*.spec.ts",
     "clean": "rimraf ./lib",
     "build:watch": "tsc -w",
-    "test:watch:localGit": "cross-env USE_LOCAL_GIT=true mocha -w --opts ./mocha.opts src/**/*.spec.ts",
     "clean:all": "rimraf ./lib && rimraf ./node_modules"
   },
   "repository": {
