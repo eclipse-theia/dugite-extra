@@ -1,5 +1,4 @@
 import { git, IGitExecutionOptions } from '../core/git'
-import { Account } from '../model/account'
 import { ICloneProgress } from '../progress'
 import { CloneProgressParser, executionOptionsWithProgress } from '../progress'
 
@@ -7,11 +6,6 @@ import { CloneProgressParser, executionOptionsWithProgress } from '../progress'
  * Additional arguments to provide when cloning a repository.
  */
 export type CloneOptions = {
-
-    /**
-     * The optional identity to provide when cloning.
-     */
-    readonly account?: Account;
 
     /**
      * The branch to checkout after the clone has completed.

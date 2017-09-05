@@ -2,23 +2,7 @@ import { git } from '../core/git'
 import { RepositoryPath } from '../model/repository';
 import { parsePorcelainStatus, mapStatus } from '../parser/status-parser'
 import { DiffSelectionType, DiffSelection } from '../model/diff'
-import { WorkingDirectoryStatus, WorkingDirectoryFileChange, AppFileStatus, FileEntry, GitStatusEntry } from '../model/status'
-
-export type AheadBehind = { ahead: number, behind: number }
-
-/** The encapsulation of the result from 'git status' */
-export interface IStatusResult {
-    readonly currentBranch?: string
-    readonly currentUpstreamBranch?: string
-    readonly currentTip?: string
-    readonly branchAheadBehind?: AheadBehind
-
-    /** true if the repository exists at the given location */
-    readonly exists: boolean
-
-    /** the absolute path to the repository's working directory */
-    readonly workingDirectory: WorkingDirectoryStatus
-}
+import { IStatusResult, IAheadBehind, WorkingDirectoryStatus, WorkingDirectoryFileChange, AppFileStatus, FileEntry, GitStatusEntry } from '../model/status'
 
 function convertToAppStatus(status: FileEntry): AppFileStatus {
     if (status.kind === 'ordinary') {
@@ -67,7 +51,7 @@ export async function getStatus(
     let currentBranch: string | undefined = undefined
     let currentUpstreamBranch: string | undefined = undefined
     let currentTip: string | undefined = undefined
-    let branchAheadBehind: AheadBehind | undefined = undefined
+    let branchAheadBehind: IAheadBehind | undefined = undefined
 
     for (const entry of parsePorcelainStatus(result.stdout)) {
         if (entry.kind === 'entry') {
