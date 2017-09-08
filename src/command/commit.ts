@@ -1,9 +1,8 @@
 import { git, GitError } from '../core/git'
 
-export async function createCommit(repositoryPath: string, message: string): Promise<boolean> {
+export async function createCommit(repositoryPath: string, message: string): Promise<void> {
     try {
         await git(['commit', '-F', '-'], repositoryPath, 'createCommit', { stdin: message });
-        return true;
     } catch (e) {
         // Commit failures could come from a pre-commit hook rejection. So display
         // a bit more context than we otherwise would.
