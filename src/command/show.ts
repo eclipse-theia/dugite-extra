@@ -16,7 +16,7 @@ const binaryEncoding: (process: ChildProcess) => void = cb => cb.stdout.setEncod
  * exists in the given revision.
  *
  * @param repositoryPath - The repository from where to read the file. Or the FS path to the repository.
- * @param commitish  - A commit SHA or some other identifier that ultimately dereferences to a commit/tree.
+ * @param commitish  - A commit SHA or some other identifier that ultimately dereferences to a commit/tree. `HEAD` is the `HEAD`. If empty string, shows the index state.
  * @param path       - The absolute FS path which is contained in the repository.
  */
 export async function getTextContents(repository: RepositoryPath, commitish: string, path: string): Promise<Buffer> {
@@ -39,7 +39,7 @@ export async function getTextContents(repository: RepositoryPath, commitish: str
  * exists in the given revision.
  *
  * @param repositoryPath - The repository from where to read the blob. Or the FS path to the repository.
- * @param commitish  - A commit SHA or some other identifier that ultimately dereferences to a commit/tree.
+ * @param commitish  - A commit SHA or some other identifier that ultimately dereferences to a commit/tree. `HEAD` is the `HEAD`. If empty string, shows the index state.
  * @param path       - The absolute FS path which is contained in the repository.
  */
 export async function getBlobContents(repositoryPath: RepositoryPath, commitish: string, path: string): Promise<Buffer> {

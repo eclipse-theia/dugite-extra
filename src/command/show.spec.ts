@@ -35,10 +35,33 @@ describe('show', async () => {
         await createCommit(repositoryPath, 'third');
         expect((await getStatus(repositoryPath)).workingDirectory.files.filter(f => f.staged)).to.be.empty;
 
-        const [third, second, HEAD] = await logCommitSHAs(repositoryPath, fileName);
-        expect((await getTextContents(repositoryPath, HEAD, fileName)).toString()).to.be.equal('A');
+        let SHAs = await logCommitSHAs(repositoryPath, fileName);
+        expect(SHAs).to.be.lengthOf(3);
+        let [HEAD, second, first] = SHAs;
+        expect((await getTextContents(repositoryPath, HEAD, fileName)).toString()).to.be.equal('third commit');
         expect((await getTextContents(repositoryPath, second, fileName)).toString()).to.be.equal('second commit');
-        expect((await getTextContents(repositoryPath, third, fileName)).toString()).to.be.equal('third commit');
+        expect((await getTextContents(repositoryPath, first, fileName)).toString()).to.be.equal('A');
+        expect((await getTextContents(repositoryPath, 'HEAD', fileName)).toString()).to.be.equal('third commit');
+
+        fs.writeFileSync(fileName, 'just staged', { encoding: 'utf8' });
+        expect(fs.readFileSync(fileName, { encoding: 'utf8' })).to.be.equal('just staged');
+        await stage(repositoryPath, fileName);
+        expect((await getStatus(repositoryPath)).workingDirectory.files.filter(f => f.staged)).to.be.lengthOf(1);
+        fs.writeFileSync(fileName, 'changed but un-staged', { encoding: 'utf8' });
+        expect(fs.readFileSync(fileName, { encoding: 'utf8' })).to.be.equal('changed but un-staged');
+
+        SHAs = await logCommitSHAs(repositoryPath, fileName);
+        expect(SHAs).to.be.lengthOf(3);
+        [HEAD, second, first] = SHAs;
+        expect((await getTextContents(repositoryPath, HEAD, fileName)).toString()).to.be.equal('third commit');
+        expect((await getTextContents(repositoryPath, second, fileName)).toString()).to.be.equal('second commit');
+        expect((await getTextContents(repositoryPath, first, fileName)).toString()).to.be.equal('A');
+        expect((await getTextContents(repositoryPath, 'HEAD', fileName)).toString()).to.be.equal('third commit');
+        expect((await getTextContents(repositoryPath, 'HEAD~1', fileName)).toString()).to.be.equal('second commit');
+        expect((await getTextContents(repositoryPath, 'HEAD~2', fileName)).toString()).to.be.equal('A');
+        expect((await getTextContents(repositoryPath, `${HEAD}~1`, fileName)).toString()).to.be.equal('second commit');
+        expect((await getTextContents(repositoryPath, `${HEAD}~2`, fileName)).toString()).to.be.equal('A');
+        expect((await getTextContents(repositoryPath, '', fileName)).toString()).to.be.equal('just staged');
     });
 
 });

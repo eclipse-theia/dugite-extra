@@ -3,7 +3,7 @@ import { git } from '../core/git';
 import { RepositoryPath } from '../model/repository';
 
 /**
- * Returns with an chronologically ordered array of commit SHA for the given file. The last element is the `HEAD` commit.
+ * Returns with an inverse chronologically ordered array of commit SHA for the given file. The first element is the `HEAD` commit.
  *
  * @param repository the repository or the absolute FS path to the local clone.
  * @param path the absolute FS path of the file from the repository which history information has to be retrieved.
