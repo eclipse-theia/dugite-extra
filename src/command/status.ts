@@ -1,30 +1,29 @@
-import { git } from '../core/git'
-import { RepositoryPath } from '../model/repository';
-import { parsePorcelainStatus, mapStatus } from '../parser/status-parser'
-import { DiffSelectionType, DiffSelection } from '../model/diff'
-import { IStatusResult, IAheadBehind, WorkingDirectoryStatus, WorkingDirectoryFileChange, AppFileStatus, FileEntry, GitStatusEntry } from '../model/status'
+import { git } from '../core/git';
+import { parsePorcelainStatus, mapStatus } from '../parser/status-parser';
+import { DiffSelectionType, DiffSelection } from '../model/diff';
+import { IStatusResult, IAheadBehind, WorkingDirectoryStatus, WorkingDirectoryFileChange, AppFileStatus, FileEntry, GitStatusEntry } from '../model/status';
 
 function convertToAppStatus(status: FileEntry): AppFileStatus {
     if (status.kind === 'ordinary') {
         switch (status.type) {
             case 'added':
-                return AppFileStatus.New
+                return AppFileStatus.New;
             case 'modified':
-                return AppFileStatus.Modified
+                return AppFileStatus.Modified;
             case 'deleted':
-                return AppFileStatus.Deleted
+                return AppFileStatus.Deleted;
         }
     } else if (status.kind === 'copied') {
-        return AppFileStatus.Copied
+        return AppFileStatus.Copied;
     } else if (status.kind === 'renamed') {
-        return AppFileStatus.Renamed
+        return AppFileStatus.Renamed;
     } else if (status.kind === 'conflicted') {
-        return AppFileStatus.Conflicted
+        return AppFileStatus.Conflicted;
     } else if (status.kind === 'untracked') {
-        return AppFileStatus.New
+        return AppFileStatus.New;
     }
 
-    throw new Error(`Unknown file status ${status}`)
+    throw new Error(`Unknown file status ${status}`);
 }
 
 function convertToStagedFlag(statusCode: string): boolean {
@@ -37,25 +36,23 @@ function convertToStagedFlag(statusCode: string): boolean {
  *  Retrieve the status for a given repository,
  *  and fail gracefully if the location is not a Git repository
  */
-export async function getStatus(
-    repository: RepositoryPath
-): Promise<IStatusResult> {
+export async function getStatus(repositoryPath: string): Promise<IStatusResult> {
     const result = await git(
         ['status', '--untracked-files=all', '--branch', '--porcelain=2', '-z'],
-        RepositoryPath.getPath(repository),
+        repositoryPath,
         'getStatus'
-    )
+    );
 
-    const files = new Array<WorkingDirectoryFileChange>()
+    const files = new Array<WorkingDirectoryFileChange>();
 
-    let currentBranch: string | undefined = undefined
-    let currentUpstreamBranch: string | undefined = undefined
-    let currentTip: string | undefined = undefined
-    let branchAheadBehind: IAheadBehind | undefined = undefined
+    let currentBranch: string | undefined = undefined;
+    let currentUpstreamBranch: string | undefined = undefined;
+    let currentTip: string | undefined = undefined;
+    let branchAheadBehind: IAheadBehind | undefined = undefined;
 
     for (const entry of parsePorcelainStatus(result.stdout)) {
         if (entry.kind === 'entry') {
-            const status = mapStatus(entry.statusCode)
+            const status = mapStatus(entry.statusCode);
 
             if (status.kind === 'ordinary') {
                 // when a file is added in the index but then removed in the working
@@ -65,7 +62,7 @@ export async function getStatus(
                     status.index === GitStatusEntry.Added &&
                     status.workingTree === GitStatusEntry.Deleted
                 ) {
-                    continue
+                    continue;
                 }
             }
 
@@ -74,17 +71,17 @@ export async function getStatus(
                 // same path, we should ensure that we only draw one entry in the
                 // changes list - see if an entry already exists for this path and
                 // remove it if found
-                const existingEntry = files.findIndex(p => p.path === entry.path)
+                const existingEntry = files.findIndex(p => p.path === entry.path);
                 if (existingEntry > -1) {
-                    files.splice(existingEntry, 1)
+                    files.splice(existingEntry, 1);
                 }
             }
 
             // for now we just poke at the existing summary
-            const summary = convertToAppStatus(status)
+            const summary = convertToAppStatus(status);
             const selection = DiffSelection.fromInitialSelection(
                 DiffSelectionType.All
-            )
+            );
 
             files.push(
                 new WorkingDirectoryFileChange(
@@ -94,32 +91,32 @@ export async function getStatus(
                     entry.oldPath,
                     convertToStagedFlag(entry.statusCode)
                 )
-            )
+            );
         } else if (entry.kind === 'header') {
-            let m: RegExpMatchArray | null
-            const value = entry.value
+            let m: RegExpMatchArray | null;
+            const value = entry.value;
 
             // This intentionally does not match branch.oid initial
             if ((m = value.match(/^branch\.oid ([a-f0-9]+)$/))) {
-                currentTip = m[1]
+                currentTip = m[1];
             } else if ((m = value.match(/^branch.head (.*)/))) {
                 if (m[1] !== '(detached)') {
-                    currentBranch = m[1]
+                    currentBranch = m[1];
                 }
             } else if ((m = value.match(/^branch.upstream (.*)/))) {
-                currentUpstreamBranch = m[1]
+                currentUpstreamBranch = m[1];
             } else if ((m = value.match(/^branch.ab \+(\d+) -(\d+)$/))) {
-                const ahead = parseInt(m[1], 10)
-                const behind = parseInt(m[2], 10)
+                const ahead = parseInt(m[1], 10);
+                const behind = parseInt(m[2], 10);
 
                 if (!isNaN(ahead) && !isNaN(behind)) {
-                    branchAheadBehind = { ahead, behind }
+                    branchAheadBehind = { ahead, behind };
                 }
             }
         }
     }
 
-    const workingDirectory = new WorkingDirectoryStatus(files, true)
+    const workingDirectory = new WorkingDirectoryStatus(files, true);
 
     return {
         currentBranch,
@@ -128,5 +125,5 @@ export async function getStatus(
         branchAheadBehind,
         exists: true,
         workingDirectory,
-    }
+    };
 }

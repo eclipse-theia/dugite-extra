@@ -16,7 +16,7 @@ describe('status', async () => {
 
     it('missing', async () => {
         try {
-            await getStatus({ path: '/does/not/exist' });
+            await getStatus('/does/not/exist');
             throw new Error('Expected error when getting status from a non-existing repository.');
         } catch (error) {
             expect(error.message).to.be.equal('Unable to find path to repository on disk.');
@@ -25,7 +25,7 @@ describe('status', async () => {
 
     it('empty', async () => {
         const repositoryPath = await createTestRepository(track.mkdirSync());
-        const status = await getStatus({ path: repositoryPath });
+        const status = await getStatus(repositoryPath);
 
         expect(status.workingDirectory.files).to.be.empty;
     });
@@ -34,7 +34,7 @@ describe('status', async () => {
         const repositoryPath = await createTestRepository(track.mkdirSync());
         const filePaths = add(repositoryPath, { path: 'X.txt' })
 
-        const status = await getStatus({ path: repositoryPath });
+        const status = await getStatus(repositoryPath);
         const files = status.workingDirectory.files;
         expect(files).to.have.lengthOf(1);
         expect(files[0].path).to.be.equal(path.relative(repositoryPath, filePaths[0]));
@@ -45,7 +45,7 @@ describe('status', async () => {
         const repositoryPath = await createTestRepository(track.mkdirSync());
         const filePaths = remove(repositoryPath, 'A.txt');
 
-        const status = await getStatus({ path: repositoryPath });
+        const status = await getStatus(repositoryPath);
         const files = status.workingDirectory.files;
         expect(files).to.have.lengthOf(1);
         expect(files[0].path).to.be.equal(path.relative(repositoryPath, filePaths[0]));
@@ -56,7 +56,7 @@ describe('status', async () => {
         const repositoryPath = await createTestRepository(track.mkdirSync());
         const filePaths = modify(repositoryPath, { path: 'A.txt', data: 'content' });
 
-        const status = await getStatus({ path: repositoryPath });
+        const status = await getStatus(repositoryPath);
         const files = status.workingDirectory.files;
         expect(files).to.have.lengthOf(1);
         expect(files[0].path).to.be.equal(path.relative(repositoryPath, filePaths[0]));

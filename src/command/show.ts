@@ -1,7 +1,6 @@
 import { relative } from 'path';
-import { ChildProcess } from 'child_process'
-import { git } from '../core/git'
-import { RepositoryPath } from '../model/repository'
+import { ChildProcess } from 'child_process';
+import { git } from '../core/git';
 
 const successExitCodes = new Set([0, 1]);
 const utf8Encoding: (process: ChildProcess) => void = cb => cb.stdout.setEncoding('utf8');
@@ -19,15 +18,14 @@ const binaryEncoding: (process: ChildProcess) => void = cb => cb.stdout.setEncod
  * @param commitish  - A commit SHA or some other identifier that ultimately dereferences to a commit/tree. `HEAD` is the `HEAD`. If empty string, shows the index state.
  * @param path       - The absolute FS path which is contained in the repository.
  */
-export async function getTextContents(repository: RepositoryPath, commitish: string, path: string): Promise<Buffer> {
-    const repositoryPath = RepositoryPath.getPath(repository);
+export async function getTextContents(repositoryPath: string, commitish: string, path: string): Promise<Buffer> {
     const args = ['show', `${commitish}:${relative(repositoryPath, path)}`];
     const opts = {
         successExitCodes,
         processCallback: utf8Encoding,
     };
-    const blobContents = await git(args, RepositoryPath.getPath(repositoryPath), 'getTextContents', opts);
-    return Buffer.from(blobContents.stdout, 'utf8');
+    const textContents = await git(args, repositoryPath, 'getTextContents', opts);
+    return Buffer.from(textContents.stdout, 'utf8');
 }
 
 /**
@@ -42,12 +40,12 @@ export async function getTextContents(repository: RepositoryPath, commitish: str
  * @param commitish  - A commit SHA or some other identifier that ultimately dereferences to a commit/tree. `HEAD` is the `HEAD`. If empty string, shows the index state.
  * @param path       - The absolute FS path which is contained in the repository.
  */
-export async function getBlobContents(repositoryPath: RepositoryPath, commitish: string, path: string): Promise<Buffer> {
+export async function getBlobContents(repositoryPath: string, commitish: string, path: string): Promise<Buffer> {
     const args = ['show', `${commitish}:${path}`];
     const opts = {
         successExitCodes,
         processCallback: binaryEncoding,
     };
-    const blobContents = await git(args, RepositoryPath.getPath(repositoryPath), 'getBlobContents', opts);
+    const blobContents = await git(args, repositoryPath, 'getBlobContents', opts);
     return Buffer.from(blobContents.stdout, 'binary');
 }

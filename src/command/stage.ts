@@ -1,7 +1,6 @@
 import * as path from 'path';
 import { git } from '../core/git';
 import { getStatus } from './status';
-import { RepositoryPath } from '../model/repository';
 import { WorkingDirectoryFileChange } from '../model/status';
 
 /**
@@ -10,8 +9,7 @@ import { WorkingDirectoryFileChange } from '../model/status';
  * @param repository the repository path to the local Git clone.
  * @param filePaths the absolute FS path of the files to stage.
  */
-export async function stage(repository: RepositoryPath, filePaths: string | string[]): Promise<void> {
-    const repositoryPath = RepositoryPath.getPath(repository);
+export async function stage(repositoryPath: string, filePaths: string | string[]): Promise<void> {
     const paths = (Array.isArray(filePaths) ? filePaths : [filePaths]).map(f => path.relative(repositoryPath, f));
     await git(['add', ...paths], repositoryPath, 'stage');
 }
@@ -22,8 +20,7 @@ export async function stage(repository: RepositoryPath, filePaths: string | stri
  * @param repository the repository path to the local Git clone.
  * @param filePaths the absolute FS path of the files to unstage.
  */
-export async function unstage(repository: RepositoryPath, filePaths: string | string[]): Promise<void> {
-    const repositoryPath = RepositoryPath.getPath(repository);
+export async function unstage(repositoryPath: string, filePaths: string | string[]): Promise<void> {
     const paths = (Array.isArray(filePaths) ? filePaths : [filePaths]).map(f => path.relative(repositoryPath, f));
     await git(['reset', '--', ...paths], repositoryPath, 'unstage');
 }
@@ -33,7 +30,7 @@ export async function unstage(repository: RepositoryPath, filePaths: string | st
  *
  * @param repository the repository or its FS path to get the staged files from.
  */
-export async function getStagedFiles(repository: RepositoryPath): Promise<WorkingDirectoryFileChange[]> {
-    const status = await getStatus(repository);
+export async function getStagedFiles(repositoryPath: string): Promise<WorkingDirectoryFileChange[]> {
+    const status = await getStatus(repositoryPath);
     return status.workingDirectory.files.filter(f => f.staged);
 }

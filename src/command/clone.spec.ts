@@ -23,7 +23,7 @@ describe('clone', async () => {
     it('public https', async () => {
         const repositoryPath = track.mkdirSync();
         await clone('https://github.com/TypeFox/dugite-extra.git', repositoryPath);
-        const status = await getStatus({ path: repositoryPath });
+        const status = await getStatus(repositoryPath);
 
         expect(status.workingDirectory.files).to.be.empty;
     });

@@ -1,6 +1,5 @@
-import { git, IGitExecutionOptions, GitError } from '../core/git'
-import { Repository } from '../model/repository'
-import { IPushProgress, PushProgressParser, executionOptionsWithProgress } from '../progress'
+import { git, IGitExecutionOptions, GitError } from '../core/git';
+import { IPushProgress, PushProgressParser, executionOptionsWithProgress } from '../progress';
 
 /**
  * Push from the remote to the branch, optionally setting the upstream.
@@ -24,62 +23,57 @@ import { IPushProgress, PushProgressParser, executionOptionsWithProgress } from 
  *                           the '--progress' command line flag for
  *                           'git push'.
  */
-export async function push(
-  repository: Repository,
-  remote: string,
-  localBranch: string,
-  remoteBranch: string | null,
-  progressCallback?: (progress: IPushProgress) => void
-): Promise<void> {
-  const args = [
-    'push',
-    remote,
-    remoteBranch ? `${localBranch}:${remoteBranch}` : localBranch,
-  ]
+export async function push(repositoryPath: string, remote: string, localBranch: string, remoteBranch?: string,
+    progressCallback?: (progress: IPushProgress) => void): Promise<void> {
 
-  if (!remoteBranch) {
-    args.push('--set-upstream')
-  }
+    const args = [
+        'push',
+        remote,
+        remoteBranch ? `${localBranch}:${remoteBranch}` : localBranch,
+    ];
 
-  let opts: IGitExecutionOptions = {}
+    if (!remoteBranch) {
+        args.push('--set-upstream');
+    }
 
-  if (progressCallback) {
-    args.push('--progress')
-    const title = `Pushing to ${remote}`
-    const kind = 'push'
+    let opts: IGitExecutionOptions = {};
 
-    opts = executionOptionsWithProgress(
-      opts,
-      new PushProgressParser(),
-      progress => {
-        const description =
-          progress.kind === 'progress' ? progress.details.text : progress.text
-        const value = progress.percent
+    if (progressCallback) {
+        args.push('--progress');
+        const title = `Pushing to ${remote}`;
+        const kind = 'push';
 
+        opts = executionOptionsWithProgress(
+            opts,
+            new PushProgressParser(),
+            progress => {
+                const description = progress.kind === 'progress' ? progress.details.text : progress.text;
+                const value = progress.percent;
+
+                progressCallback({
+                    kind,
+                    title,
+                    description,
+                    value,
+                    remote,
+                    branch: localBranch,
+                });
+            }
+        );
+
+        // Initial progress
         progressCallback({
-          kind,
-          title,
-          description,
-          value,
-          remote,
-          branch: localBranch,
-        })
-      }
-    )
+            kind: 'push',
+            title,
+            value: 0,
+            remote,
+            branch: localBranch,
+        });
+    }
 
-    // Initial progress
-    progressCallback({
-      kind: 'push',
-      title,
-      value: 0,
-      remote,
-      branch: localBranch,
-    })
-  }
+    const result = await git(args, repositoryPath, 'push', opts);
 
-  const result = await git(args, repository.path, 'push', opts)
-
-  if (result.gitErrorDescription) {
-    throw new GitError(result, args)
-  }
+    if (result.gitErrorDescription) {
+        throw new GitError(result, args);
+    }
 }

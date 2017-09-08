@@ -95,7 +95,7 @@ async function getBranches(repositoryPath: string, ...prefixes: string[]): Promi
         const author = CommitIdentity.parseIdentity(authorIdentity);
 
         if (!author) {
-            throw new Error(`Couldn't parse author identity ${authorIdentity}`);
+            throw new Error(`Couldn't parse author identity ${authorIdentity}.`);
         }
 
         const parentSHAs = pieces[5].split(' ');

@@ -1,7 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { git } from '../core/git';
-import { RepositoryPath } from '../model/repository';
 
 /**
  * Initializes a new Git repository to the destination folder. On demand, creates the desired folder structure and commits the changes.
@@ -46,9 +45,8 @@ export async function usesLocalGit(): Promise<boolean> {
     return process.env.USE_LOCAL_GIT === 'true';
 }
 
-export function remove(repositoryPath: string | RepositoryPath, filesToDelete: string | string[]): string[] {
-    const repoPath = typeof repositoryPath === 'string' ? repositoryPath : RepositoryPath.getPath(repositoryPath);
-    const files = (Array.isArray(filesToDelete) ? filesToDelete : [filesToDelete]).map(f => path.join(repoPath, f));
+export function remove(repositoryPath: string, filesToDelete: string | string[]): string[] {
+    const files = (Array.isArray(filesToDelete) ? filesToDelete : [filesToDelete]).map(f => path.join(repositoryPath, f));
     for (const f of files) {
         if (!fs.existsSync(f)) {
             throw new Error(`Cannot delete file ${f}, it does not exist.`);
@@ -64,10 +62,9 @@ export function remove(repositoryPath: string | RepositoryPath, filesToDelete: s
     return files;
 }
 
-export function add(repositoryPath: string | RepositoryPath, filesToCreate: { path: string, data?: string } | { path: string, data?: string }[]): string[] {
-    const repoPath = typeof repositoryPath === 'string' ? repositoryPath : RepositoryPath.getPath(repositoryPath);
+export function add(repositoryPath: string, filesToCreate: { path: string, data?: string } | { path: string, data?: string }[]): string[] {
     const files = (Array.isArray(filesToCreate) ? filesToCreate : [filesToCreate]).map(f => {
-        return { path: path.join(repoPath, f.path), data: f.data || '' }
+        return { path: path.join(repositoryPath, f.path), data: f.data || '' }
     });
     for (const f of files) {
         if (fs.existsSync(f.path)) {
@@ -81,10 +78,9 @@ export function add(repositoryPath: string | RepositoryPath, filesToCreate: { pa
     return files.map(f => f.path);
 }
 
-export function modify(repositoryPath: string | RepositoryPath, filesToModify: { path: string, data: string } | { path: string, data: string }[]): string[] {
-    const repoPath = typeof repositoryPath === 'string' ? repositoryPath : RepositoryPath.getPath(repositoryPath);
+export function modify(repositoryPath: string, filesToModify: { path: string, data: string } | { path: string, data: string }[]): string[] {
     const files = (Array.isArray(filesToModify) ? filesToModify : [filesToModify]).map(f => {
-        return { path: path.join(repoPath, f.path), data: f.data }
+        return { path: path.join(repositoryPath, f.path), data: f.data }
     });
     for (const f of files) {
         if (!fs.existsSync(f.path)) {
@@ -101,10 +97,9 @@ export function modify(repositoryPath: string | RepositoryPath, filesToModify: {
     return files.map(f => f.path);
 }
 
-export function rename(repositoryPath: string | RepositoryPath, filesToRename: { oldPath: string, newPath: string } | { oldPath: string, newPath: string }[]): string[] {
-    const repoPath = typeof repositoryPath === 'string' ? repositoryPath : RepositoryPath.getPath(repositoryPath);
+export function rename(repositoryPath: string, filesToRename: { oldPath: string, newPath: string } | { oldPath: string, newPath: string }[]): string[] {
     const files = (Array.isArray(filesToRename) ? filesToRename : [filesToRename]).map(f => {
-        return { oldPath: path.join(repoPath, f.oldPath), newPath: path.join(repoPath, f.newPath) }
+        return { oldPath: path.join(repositoryPath, f.oldPath), newPath: path.join(repositoryPath, f.newPath) }
     });
     for (const f of files) {
         if (!fs.existsSync(f.oldPath)) {

@@ -18,7 +18,7 @@ describe('stage', async () => {
 
         it('missing', async () => {
             try {
-                await stage({ path: '/does/not/exist' }, []);
+                await stage('/does/not/exist', []);
                 throw new Error('Expected error when getting status from a non-existing repository.');
             } catch (error) {
                 expect(error.message).to.be.equal('Unable to find path to repository on disk.');
@@ -29,15 +29,15 @@ describe('stage', async () => {
             const repositoryPath = await createTestRepository(track.mkdirSync());
             const filePaths = add(repositoryPath, { path: 'X.txt' });
 
-            const beforeStatus = await getStatus({ path: repositoryPath });
+            const beforeStatus = await getStatus(repositoryPath);
             let files = beforeStatus.workingDirectory.files;
             expect(files).to.have.lengthOf(1);
             expect(files[0].path).to.be.equal(path.relative(repositoryPath, filePaths[0]));
             expect(files[0].status).to.be.equal(FileStatus.New);
             expect(files[0].staged).to.be.false;
 
-            await stage({ path: repositoryPath }, filePaths);
-            const afterStatus = await getStatus({ path: repositoryPath });
+            await stage(repositoryPath, filePaths);
+            const afterStatus = await getStatus(repositoryPath);
 
             files = afterStatus.workingDirectory.files;
             expect(files).to.have.lengthOf(1);
@@ -50,14 +50,14 @@ describe('stage', async () => {
             const repositoryPath = await createTestRepository(track.mkdirSync());
             const filePaths = remove(repositoryPath, 'A.txt');
 
-            const beforeStatus = await getStatus({ path: repositoryPath });
+            const beforeStatus = await getStatus(repositoryPath);
             let files = beforeStatus.workingDirectory.files;
             expect(files).to.have.lengthOf(1);
             expect(files[0].path).to.be.equal(path.relative(repositoryPath, filePaths[0]));
             expect(files[0].status).to.be.equal(FileStatus.Deleted);
 
-            await stage({ path: repositoryPath }, filePaths);
-            const afterStatus = await getStatus({ path: repositoryPath });
+            await stage(repositoryPath, filePaths);
+            const afterStatus = await getStatus(repositoryPath);
 
             files = afterStatus.workingDirectory.files;
             expect(files).to.have.lengthOf(1);
@@ -70,14 +70,14 @@ describe('stage', async () => {
             const repositoryPath = await createTestRepository(track.mkdirSync());
             const filePaths = modify(repositoryPath, { path: 'A.txt', data: 'content' });
 
-            const beforeStatus = await getStatus({ path: repositoryPath });
+            const beforeStatus = await getStatus(repositoryPath);
             let files = beforeStatus.workingDirectory.files;
             expect(files).to.have.lengthOf(1);
             expect(files[0].path).to.be.equal(path.relative(repositoryPath, filePaths[0]));
             expect(files[0].status).to.be.equal(FileStatus.Modified);
 
-            await stage({ path: repositoryPath }, filePaths);
-            const afterStatus = await getStatus({ path: repositoryPath });
+            await stage(repositoryPath, filePaths);
+            const afterStatus = await getStatus(repositoryPath);
 
             files = afterStatus.workingDirectory.files;
             expect(files).to.have.lengthOf(1);
@@ -91,7 +91,7 @@ describe('stage', async () => {
 
         it('missing', async () => {
             try {
-                await getStagedFiles({ path: '/does/not/exist' });
+                await getStagedFiles('/does/not/exist');
                 throw new Error('Expected error when getting status from a non-existing repository.');
             } catch (error) {
                 expect(error.message).to.be.equal('Unable to find path to repository on disk.');

@@ -2,7 +2,6 @@ import * as Path from 'path';
 import * as Fs from 'fs';
 import { git, IGitExecutionOptions } from '../core/git'
 import { getBlobContents } from './show'
-import { RepositoryPath } from '../model/repository'
 import { WorkingDirectoryFileChange, AppFileStatus, FileChange } from '../model/status'
 import { DiffType, IRawDiff, IDiff, IImageDiff, Image } from '../model/diff'
 import { DiffParser } from '../parser/diff-parser'
@@ -10,7 +9,7 @@ import { DiffParser } from '../parser/diff-parser'
 /**
  *  Defining the list of known extensions we can render inside the app
  */
-const imageFileExtensions = new Set(['.png', '.jpg', '.jpeg', '.gif'])
+const imageFileExtensions = new Set(['.png', '.jpg', '.jpeg', '.gif']);
 
 /**
  * Render the difference between a file in the given commit and its parent
@@ -18,13 +17,11 @@ const imageFileExtensions = new Set(['.png', '.jpg', '.jpeg', '.gif'])
  * @param commitish A commit SHA or some other identifier that ultimately dereferences
  *                  to a commit.
  */
-export function getCommitDiff(repositoryPath: RepositoryPath, file: FileChange, commitish: string): Promise<IDiff> {
-
-    const args = ['log', commitish, '-m', '-1', '--first-parent', '--patch-with-raw', '-z', '--no-color', '--', file.path]
-
-    return git(args, RepositoryPath.getPath(repositoryPath), 'getCommitDiff')
+export function getCommitDiff(repositoryPath: string, file: FileChange, commitish: string): Promise<IDiff> {
+    const args = ['log', commitish, '-m', '-1', '--first-parent', '--patch-with-raw', '-z', '--no-color', '--', file.path];
+    return git(args, repositoryPath, 'getCommitDiff')
         .then(value => diffFromRawDiffOutput(value.stdout))
-        .then(diff => convertDiff(repositoryPath, file, diff, commitish))
+        .then(diff => convertDiff(repositoryPath, file, diff, commitish));
 }
 
 /**
@@ -32,11 +29,10 @@ export function getCommitDiff(repositoryPath: RepositoryPath, file: FileChange, 
  * compared against HEAD if it's tracked, if not it'll be compared to an empty file meaning
  * that all content in the file will be treated as additions.
  */
-export function getWorkingDirectoryDiff(repositoryPath: RepositoryPath, file: WorkingDirectoryFileChange): Promise<IDiff> {
+export function getWorkingDirectoryDiff(repositoryPath: string, file: WorkingDirectoryFileChange): Promise<IDiff> {
 
-    const path = RepositoryPath.getPath(repositoryPath);
-    let opts: IGitExecutionOptions | undefined
-    let args: Array<string>
+    let opts: IGitExecutionOptions | undefined;
+    let args: string[];
 
     // `--no-ext-diff` should be provided wherever we invoke `git diff` so that any
     // diff.external program configured by the user is ignored
@@ -52,8 +48,8 @@ export function getWorkingDirectoryDiff(repositoryPath: RepositoryPath, file: Wo
         //
         // citation in source:
         // https://github.com/git/git/blob/1f66975deb8402131fbf7c14330d0c7cdebaeaa2/diff-no-index.c#L300
-        opts = { successExitCodes: new Set([0, 1]) }
-        args = ['diff', '--no-ext-diff', '--no-index', '--patch-with-raw', '-z', '--no-color', '--', '/dev/null', file.path]
+        opts = { successExitCodes: new Set([0, 1]) };
+        args = ['diff', '--no-ext-diff', '--no-index', '--patch-with-raw', '-z', '--no-color', '--', '/dev/null', file.path];
     } else if (file.status === AppFileStatus.Renamed) {
         // NB: Technically this is incorrect, the best kind of incorrect.
         // In order to show exactly what will end up in the commit we should
@@ -62,19 +58,19 @@ export function getWorkingDirectoryDiff(repositoryPath: RepositoryPath, file: Wo
         // already staged to the renamed file which differs from our other diffs.
         // The closest I got to that was running hash-object and then using
         // git diff <blob> <blob> but that seems a bit excessive.
-        args = ['diff', '--no-ext-diff', '--patch-with-raw', '-z', '--no-color', '--', file.path]
+        args = ['diff', '--no-ext-diff', '--patch-with-raw', '-z', '--no-color', '--', file.path];
     } else {
-        args = ['diff', 'HEAD', '--no-ext-diff', '--patch-with-raw', '-z', '--no-color', '--', file.path]
+        args = ['diff', 'HEAD', '--no-ext-diff', '--patch-with-raw', '-z', '--no-color', '--', file.path];
     }
 
-    return git(args, path, 'getWorkingDirectoryDiff', opts)
+    return git(args, repositoryPath, 'getWorkingDirectoryDiff', opts)
         .then(value => diffFromRawDiffOutput(value.stdout))
-        .then(diff => convertDiff(repositoryPath, file, diff, 'HEAD'))
+        .then(diff => convertDiff(repositoryPath, file, diff, 'HEAD'));
 }
 
-async function getImageDiff(repositoryPath: RepositoryPath, file: FileChange, commitish: string): Promise<IImageDiff> {
-    let current: Image | undefined = undefined
-    let previous: Image | undefined = undefined
+async function getImageDiff(repositoryPath: string, file: FileChange, commitish: string): Promise<IImageDiff> {
+    let current: Image | undefined = undefined;
+    let previous: Image | undefined = undefined;
 
     // Are we looking at a file in the working directory or a file in a commit?
     if (file instanceof WorkingDirectoryFileChange) {
@@ -82,23 +78,23 @@ async function getImageDiff(repositoryPath: RepositoryPath, file: FileChange, co
         // Ideally we'd show all three versions and let the user pick but that's
         // a bit out of scope for now.
         if (file.status === AppFileStatus.Conflicted) {
-            return { kind: DiffType.Image }
+            return { kind: DiffType.Image };
         }
 
         // Does it even exist in the working directory?
         if (file.status !== AppFileStatus.Deleted) {
-            current = await getWorkingDirectoryImage(repositoryPath, file)
+            current = await getWorkingDirectoryImage(repositoryPath, file);
         }
 
         if (file.status !== AppFileStatus.New) {
             // If we have file.oldPath that means it's a rename so we'll
             // look for that file.
-            previous = await getBlobImage(repositoryPath, file.oldPath || file.path, 'HEAD')
+            previous = await getBlobImage(repositoryPath, file.oldPath || file.path, 'HEAD');
         }
     } else {
         // File status can't be conflicted for a file in a commit
         if (file.status !== AppFileStatus.Deleted) {
-            current = await getBlobImage(repositoryPath, file.path, commitish)
+            current = await getBlobImage(repositoryPath, file.path, commitish);
         }
 
         // File status can't be conflicted for a file in a commit
@@ -107,7 +103,7 @@ async function getImageDiff(repositoryPath: RepositoryPath, file: FileChange, co
             //
             // If we have file.oldPath that means it's a rename so we'll
             // look for that file.
-            previous = await getBlobImage(repositoryPath, file.oldPath || file.path, `${commitish}^`)
+            previous = await getBlobImage(repositoryPath, file.oldPath || file.path, `${commitish}^`);
         }
     }
 
@@ -115,20 +111,20 @@ async function getImageDiff(repositoryPath: RepositoryPath, file: FileChange, co
         kind: DiffType.Image,
         previous: previous,
         current: current,
-    }
+    };
 }
 
-export async function convertDiff(repositoryPath: RepositoryPath, file: FileChange, diff: IRawDiff, commitish: string): Promise<IDiff> {
+export async function convertDiff(repositoryPath: string, file: FileChange, diff: IRawDiff, commitish: string): Promise<IDiff> {
     if (diff.isBinary) {
-        const extension = Path.extname(file.path)
+        const extension = Path.extname(file.path);
 
         // some extension we don't know how to parse, never mind
         if (!imageFileExtensions.has(extension)) {
             return {
                 kind: DiffType.Binary,
-            }
+            };
         } else {
-            return getImageDiff(repositoryPath, file, commitish)
+            return getImageDiff(repositoryPath, file, commitish);
         }
     }
 
@@ -136,7 +132,7 @@ export async function convertDiff(repositoryPath: RepositoryPath, file: FileChan
         kind: DiffType.Text,
         text: diff.contents,
         hunks: diff.hunks,
-    }
+    };
 }
 
 /**
@@ -144,17 +140,17 @@ export async function convertDiff(repositoryPath: RepositoryPath, file: FileChan
  */
 function getMediaType(extension: string) {
     if (extension === '.png') {
-        return 'image/png'
+        return 'image/png';
     }
     if (extension === '.jpg' || extension === '.jpeg') {
-        return 'image/jpg'
+        return 'image/jpg';
     }
     if (extension === '.gif') {
-        return 'image/gif'
+        return 'image/gif';
     }
 
     // fallback value as per the spec
-    return 'text/plain'
+    return 'text/plain';
 }
 
 /**
@@ -163,29 +159,27 @@ function getMediaType(extension: string) {
  * Parses the output from a diff-like command that uses `--path-with-raw`
  */
 function diffFromRawDiffOutput(result: string): IRawDiff {
-    const pieces = result.split('\0')
-    const parser = new DiffParser()
-    return parser.parse(pieces[pieces.length - 1])
+    const pieces = result.split('\0');
+    const parser = new DiffParser();
+    return parser.parse(pieces[pieces.length - 1]);
 }
 
-export async function getBlobImage(repositoryPath: RepositoryPath, path: string, commitish: string): Promise<Image> {
-    const extension = Path.extname(path)
-    const contents = await getBlobContents(repositoryPath, commitish, path)
-    const diff: Image = {
+export async function getBlobImage(repositoryPath: string, path: string, commitish: string): Promise<Image> {
+    const extension = Path.extname(path);
+    const contents = await getBlobContents(repositoryPath, commitish, path);
+    return {
         contents: contents.toString('base64'),
         mediaType: getMediaType(extension),
-    }
-    return diff
+    };
 }
 
-export async function getWorkingDirectoryImage(repositoryPath: RepositoryPath, file: FileChange): Promise<Image> {
-    const extension = Path.extname(file.path)
-    const contents = await getWorkingDirectoryContents(repositoryPath, file)
-    const diff: Image = {
+export async function getWorkingDirectoryImage(repositoryPath: string, file: FileChange): Promise<Image> {
+    const extension = Path.extname(file.path);
+    const contents = await getWorkingDirectoryContents(repositoryPath, file);
+    return {
         contents: contents,
         mediaType: getMediaType(extension),
-    }
-    return diff
+    };
 }
 
 /**
@@ -198,16 +192,16 @@ export async function getWorkingDirectoryImage(repositoryPath: RepositoryPath, f
  * https://en.wikipedia.org/wiki/Data_URI_scheme
  *
  */
-async function getWorkingDirectoryContents(repositoryPath: RepositoryPath, file: FileChange): Promise<string> {
+async function getWorkingDirectoryContents(repositoryPath: string, file: FileChange): Promise<string> {
     return new Promise<string>((resolve, reject) => {
-        const path = Path.join(RepositoryPath.getPath(repositoryPath), file.path)
+        const path = Path.join(repositoryPath, file.path);
 
         Fs.readFile(path, { flag: 'r' }, (error, buffer) => {
             if (error) {
-                reject(error)
-                return
+                reject(error);
+                return;
             }
-            resolve(buffer.toString('base64'))
-        })
-    })
+            resolve(buffer.toString('base64'));
+        });
+    });
 }

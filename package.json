@@ -1,56 +1,56 @@
 {
-  "name": "dugite-extra",
-  "version": "0.0.1-alpha.4",
-  "description": "High-level Git commands for dugite.",
-  "main": "lib/index",
-  "typings": "lib/index",
-  "scripts": {
-    "build": "tsc && tslint -c ./tslint.json --project ./tsconfig.json",
-    "test": "npm run test:embedded && npm run test:external",
-    "test:watch": "concurrently -n embedded,external \"npm run test:embedded:watch\" \"npm run test:external\" ",
-    "test:embedded": "mocha --opts ./mocha.opts src/**/*.spec.ts",
-    "test:external": "cross-env USE_LOCAL_GIT=true mocha --opts ./mocha.opts src/**/*.spec.ts",
-    "test:embedded:watch": "mocha -w --opts ./mocha.opts src/**/*.spec.ts",
-    "test:external:watch": "cross-env USE_LOCAL_GIT=true mocha -w --opts ./mocha.opts src/**/*.spec.ts",
-    "clean": "rimraf ./lib",
-    "build:watch": "tsc -w",
-    "clean:all": "rimraf ./lib && rimraf ./node_modules"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/TypeFox/dugite-extra"
-  },
-  "bugs": {
-    "url": "https://github.com/TypeFox/dugite-extra/issues"
-  },
-  "homepage": "https://github.com/TypeFox/dugite-extra",
-  "files": [
-    "lib",
-    "src"
-  ],
-  "author": "",
-  "license": "MIT",
-  "dependencies": {
-    "byline": "^5.0.0",
-    "dugite": "^1.29.0",
-    "find-git-exec": "0.0.1-alpha.2"
-  },
-  "devDependencies": {
-    "@types/chai": "^3.5.2",
-    "@types/fs-extra": "^4.0.0",
-    "@types/mocha": "^2.2.41",
-    "@types/node": "^7.0.22",
-    "@types/temp": "^0.8.29",
-    "chai": "^4.0.0",
-    "concurrently": "^3.5.0",
-    "cross-env": "^5.0.5",
-    "fs-extra": "^4.0.1",
-    "mocha": "^3.4.2",
-    "rimraf": "^2.6.1",
-    "temp": "^0.8.3",
-    "ts-node": "^3.3.0",
-    "tslint": "^5.7.0",
-    "tslint-no-unused-expression-chai": "0.0.2",
-    "typescript": "^2.3.4"
-  }
+    "name": "dugite-extra",
+    "version": "0.0.1-alpha.5",
+    "description": "High-level Git commands for dugite.",
+    "main": "lib/index",
+    "typings": "lib/index",
+    "scripts": {
+        "build": "tsc && tslint -c ./tslint.json --project ./tsconfig.json",
+        "test": "npm run test:embedded && npm run test:external",
+        "test:watch": "concurrently -n embedded,external \"npm run test:embedded:watch\" \"npm run test:external\" ",
+        "test:embedded": "mocha --opts ./mocha.opts src/**/*.spec.ts",
+        "test:external": "cross-env USE_LOCAL_GIT=true mocha --opts ./mocha.opts src/**/*.spec.ts",
+        "test:embedded:watch": "mocha -w --opts ./mocha.opts src/**/*.spec.ts",
+        "test:external:watch": "cross-env USE_LOCAL_GIT=true mocha -w --opts ./mocha.opts src/**/*.spec.ts",
+        "clean": "rimraf ./lib",
+        "build:watch": "tsc -w",
+        "clean:all": "rimraf ./lib && rimraf ./node_modules"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/TypeFox/dugite-extra"
+    },
+    "bugs": {
+        "url": "https://github.com/TypeFox/dugite-extra/issues"
+    },
+    "homepage": "https://github.com/TypeFox/dugite-extra",
+    "files": [
+        "lib",
+        "src"
+    ],
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+        "byline": "^5.0.0",
+        "dugite": "^1.29.0",
+        "find-git-exec": "0.0.1-alpha.2"
+    },
+    "devDependencies": {
+        "@types/chai": "^3.5.2",
+        "@types/fs-extra": "^4.0.0",
+        "@types/mocha": "^2.2.41",
+        "@types/node": "^7.0.22",
+        "@types/temp": "^0.8.29",
+        "chai": "^4.0.0",
+        "concurrently": "^3.5.0",
+        "cross-env": "^5.0.5",
+        "fs-extra": "^4.0.1",
+        "mocha": "^3.4.2",
+        "rimraf": "^2.6.1",
+        "temp": "^0.8.3",
+        "ts-node": "^3.3.0",
+        "tslint": "^5.7.0",
+        "tslint-no-unused-expression-chai": "0.0.2",
+        "typescript": "^2.3.4"
+    }
 }
