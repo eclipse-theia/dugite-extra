@@ -28,7 +28,7 @@ function convertToAppStatus(status: FileEntry): AppFileStatus {
 
 // See: https://git-scm.com/docs/git-status#_short_format
 function isChangeInIndex(statusCode: string): boolean {
-    const [index,] = statusCode.charAt(0);
+    const index = statusCode.charAt(0);
     return index === 'M' || index === 'A' || index === 'D' || index === 'U' || index === 'R' || index === 'C';
 }
 
