@@ -26,10 +26,15 @@ function convertToAppStatus(status: FileEntry): AppFileStatus {
     throw new Error(`Unknown file status ${status}`);
 }
 
-function convertToStagedFlag(statusCode: string): boolean {
-    // For instance, when the status code is '?', or '.M', the the files are unstaged.
-    // When the status code is one of the followings: 'A.', or 'M.', the it is staged.
-    return statusCode.trim().endsWith('.');
+// See: https://git-scm.com/docs/git-status#_short_format
+function isChangeInIndex(statusCode: string): boolean {
+    const [index,] = statusCode.charAt(0);
+    return index === 'M' || index === 'A' || index === 'D' || index === 'U' || index === 'R' || index === 'C';
+}
+
+function isChangeInWorkTree(statusCode: string): boolean {
+    const [, workingTree] = statusCode;
+    return workingTree === 'M' || workingTree === 'A' || workingTree === 'D' || workingTree === 'U';
 }
 
 /**
@@ -83,15 +88,45 @@ export async function getStatus(repositoryPath: string): Promise<IStatusResult> 
                 DiffSelectionType.All
             );
 
-            files.push(
-                new WorkingDirectoryFileChange(
-                    entry.path,
-                    summary,
-                    selection,
-                    entry.oldPath,
-                    convertToStagedFlag(entry.statusCode)
-                )
-            );
+            const changeInIndex = isChangeInIndex(entry.statusCode);
+            const changeInWorkingTree = isChangeInWorkTree(entry.statusCode);
+            if (changeInIndex) {
+                files.push(
+                    new WorkingDirectoryFileChange(
+                        entry.path,
+                        summary,
+                        selection,
+                        entry.oldPath,
+                        true
+                    )
+                );
+            }
+
+            if (changeInWorkingTree) {
+                files.push(
+                    new WorkingDirectoryFileChange(
+                        entry.path,
+                        summary,
+                        selection,
+                        entry.oldPath,
+                        false
+                    )
+                );
+            }
+
+            // Must be untracked
+            if (!changeInIndex && !changeInWorkingTree) {
+                files.push(
+                    new WorkingDirectoryFileChange(
+                        entry.path,
+                        summary,
+                        selection,
+                        entry.oldPath,
+                        false
+                    )
+                );
+            }
+
         } else if (entry.kind === 'header') {
             let m: RegExpMatchArray | null;
             const value = entry.value;

@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as temp from 'temp';
+import * as fs from 'fs';
 import { expect } from 'chai';
 import { stage, unstage, getStagedFiles } from './stage';
 import { getStatus } from './status';
@@ -85,6 +86,7 @@ describe('stage', async () => {
             expect(files[0].status).to.be.equal(FileStatus.Modified);
             expect(files[0].staged).to.be.true;
         });
+
     });
 
     describe('getStagedFiles', async () => {
@@ -117,6 +119,25 @@ describe('stage', async () => {
             expect(files).to.be.lengthOf(2);
             expect(files.map(f => f.path)).to.deep.equal(['X.txt', 'Y.txt']);
             expect(files.map(f => f.oldPath).filter(p => p)).to.deep.equal(['B.txt']);
+        });
+
+        it('modifying a staged file should result in two changes', async () => {
+            const repositoryPath = await createTestRepository(track.mkdirSync('foo'));
+
+            await stage(repositoryPath, modify(repositoryPath, { path: 'A.txt', data: 'new content' }));
+            const stagedFiles = await getStagedFiles(repositoryPath);
+            expect(stagedFiles).to.be.lengthOf(1);
+            expect(stagedFiles.map(f => f.path)).to.deep.equal(['A.txt']);
+
+
+            fs.writeFileSync(path.join(repositoryPath, 'A.txt'), 'yet another new content', 'utf8');
+            expect(fs.readFileSync(path.join(repositoryPath, 'A.txt'), 'utf8')).to.be.deep.equal('yet another new content');
+
+            const status = await getStatus(repositoryPath);
+            const changedFiles = status.workingDirectory.files;
+            expect(changedFiles).to.be.lengthOf(2);
+            expect(changedFiles.map(f => f.path)).to.deep.equal(['A.txt', 'A.txt']);
+            expect(changedFiles.map(f => f.staged).sort()).to.deep.equal([false, true]);
         });
 
     });
