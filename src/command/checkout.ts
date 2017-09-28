@@ -1,3 +1,4 @@
+import * as Path from 'path';
 import { git } from '../core/git'
 import { ChildProcess } from 'child_process'
 import { ICheckoutProgress, CheckoutProgressParser, progressProcessCallback } from '../progress'
@@ -51,16 +52,30 @@ export async function checkoutBranch(repositoryPath: string, name: string, progr
 
 /** Check out the paths at HEAD. */
 export async function checkoutPaths(repositoryPath: string, paths: string[]): Promise<void> {
-    await git(['checkout', 'HEAD', '--', ...paths], repositoryPath, 'checkoutPaths');
+    await checkout(repositoryPath, paths, 'HEAD');
 }
 
 /**
  * Reverts the state of the file to the specified one.
  *
  * @param repositoryPath the local Git clone or its FS path.
- * @param path the absolute file path that has to be checked out.
- * @param commitSHA the commit SHA to check out. If not given, `HEAD` will be checked out.
+ * @param paths the absolute file paths of the resources that have to be checked out.
+ * @param treeish the commit SHA to check out. If not given, `HEAD` will be checked out.
+ * @param merge when checking out paths from the index, this option lets you recreate the conflicted merge in the specified paths.
+ * @param force when checking out paths from the index, do not fail upon unmerged entries; instead, unmerged entries are ignored.
  */
-export async function checkout(repositoryPath: string, path: string, commitSHA?: string): Promise<void> {
-
+export async function checkout(repositoryPath: string, paths: string[], commitSHA?: string, merge?: boolean, force?: boolean): Promise<void> {
+    const args = ['checkout'];
+    if (commitSHA) {
+        args.push(commitSHA);
+    }
+    if (merge) {
+        args.push('-m');
+    }
+    if (force) {
+        args.push('-f');
+    }
+    args.push('--');
+    args.push(...paths.map(p => Path.relative(repositoryPath, p)));
+    await git(args, repositoryPath, 'checkoutPaths');
 }
