@@ -46,8 +46,8 @@ export async function pull(repositoryPath: string, remote: string, progressCallb
     }
 
     const args = progressCallback
-        ? ['pull', '--no-rebase', '--progress', remote]
-        : ['pull', '--no-rebase', remote];
+        ? ['pull', '--progress', remote]
+        : ['pull', remote];
 
     const result = await git(args, repositoryPath, 'pull', opts);
 
