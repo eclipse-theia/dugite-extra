@@ -32,10 +32,6 @@ export async function push(repositoryPath: string, remote: string, localBranch: 
         remoteBranch ? `${localBranch}:${remoteBranch}` : localBranch,
     ];
 
-    if (!remoteBranch) {
-        args.push('--set-upstream');
-    }
-
     let opts: IGitExecutionOptions = {};
 
     if (progressCallback) {
