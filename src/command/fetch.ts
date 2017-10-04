@@ -50,8 +50,8 @@ export async function fetch(repositoryPath: string, remote: string, progressCall
     }
 
     const args = progressCallback
-        ? ['fetch', '--progress', '--prune', remote]
-        : ['fetch', '--prune', remote];
+        ? ['fetch', '--progress', remote]
+        : ['fetch', remote];
 
     await git(args, repositoryPath, 'fetch', opts);
 }
