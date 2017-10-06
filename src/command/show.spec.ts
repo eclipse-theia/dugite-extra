@@ -62,6 +62,17 @@ describe('show', async () => {
         expect((await getTextContents(repositoryPath, `${HEAD}~1`, fileName)).toString()).to.be.equal('second commit');
         expect((await getTextContents(repositoryPath, `${HEAD}~2`, fileName)).toString()).to.be.equal('A');
         expect((await getTextContents(repositoryPath, '', fileName)).toString()).to.be.equal('just staged');
+
+        const nestedFileName = Path.join(repositoryPath, 'folder', 'C.txt');
+        expect(fs.readFileSync(nestedFileName, { encoding: 'utf8' })).to.be.equal('C');
+        expect((await getTextContents(repositoryPath, 'HEAD', nestedFileName)).toString()).to.be.equal('C');
+        fs.writeFileSync(nestedFileName, 'some other content', { encoding: 'utf8' });
+        expect(fs.readFileSync(nestedFileName, { encoding: 'utf8' })).to.be.equal('some other content');
+        expect((await getTextContents(repositoryPath, 'HEAD', nestedFileName)).toString()).to.be.equal('C');
+        expect((await getTextContents(repositoryPath, '', nestedFileName)).toString()).to.be.equal('C');
+        await stage(repositoryPath, nestedFileName);
+        expect((await getTextContents(repositoryPath, 'HEAD', nestedFileName)).toString()).to.be.equal('C');
+        expect((await getTextContents(repositoryPath, '', nestedFileName)).toString()).to.be.equal('some other content');
     });
 
 });

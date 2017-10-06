@@ -2,6 +2,9 @@ import { relative } from 'path';
 import { ChildProcess } from 'child_process';
 import { git } from '../core/git';
 
+const upath = require('upath');
+const normalizeSafe: (path: string) => string = upath.normalizeSafe;
+
 const successExitCodes = new Set([0, 1]);
 const utf8Encoding: (process: ChildProcess) => void = cb => cb.stdout.setEncoding('utf8');
 const binaryEncoding: (process: ChildProcess) => void = cb => cb.stdout.setEncoding('binary');
@@ -19,7 +22,7 @@ const binaryEncoding: (process: ChildProcess) => void = cb => cb.stdout.setEncod
  * @param path       - The absolute FS path which is contained in the repository.
  */
 export async function getTextContents(repositoryPath: string, commitish: string, path: string): Promise<Buffer> {
-    const args = ['show', `${commitish}:${relative(repositoryPath, path)}`];
+    const args = ['show', `${commitish}:${normalizeSafe(relative(repositoryPath, path))}`];
     const opts = {
         successExitCodes,
         processCallback: utf8Encoding,

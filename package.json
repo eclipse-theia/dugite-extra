@@ -1,6 +1,6 @@
 {
     "name": "dugite-extra",
-    "version": "0.0.1-alpha.11",
+    "version": "0.0.1-alpha.12",
     "description": "High-level Git commands for dugite.",
     "main": "lib/index",
     "typings": "lib/index",
@@ -33,7 +33,8 @@
     "dependencies": {
         "byline": "^5.0.0",
         "dugite": "1.42.0",
-        "find-git-exec": "0.0.1-alpha.2"
+        "find-git-exec": "0.0.1-alpha.2",
+        "upath": "^1.0.0"
     },
     "devDependencies": {
         "@types/chai": "^3.5.2",
