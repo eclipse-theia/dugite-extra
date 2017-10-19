@@ -9,13 +9,16 @@ import { IPullProgress } from '../progress';
  *
  * @param remote     - The name of the remote that should be pulled from
  *
+ * @param branch     - The name of the branch to pull from. It is required when pulling from a remote which is
+ *                      not the default remote tracking of the currently active branch.
+ *
  * @param progressCallback - An optional function which will be invoked
  *                           with information about the current progress
  *                           of the pull operation. When provided this enables
  *                           the '--progress' command line flag for
  *                           'git pull'.
  */
-export async function pull(repositoryPath: string, remote: string, progressCallback?: (progress: IPullProgress) => void): Promise<void> {
+export async function pull(repositoryPath: string, remote: string, branch?: string, progressCallback?: (progress: IPullProgress) => void): Promise<void> {
     let opts: IGitExecutionOptions = {};
     if (progressCallback) {
         const title = `Pulling ${remote}`;
@@ -45,9 +48,15 @@ export async function pull(repositoryPath: string, remote: string, progressCallb
         progressCallback({ kind, title, value: 0, remote })
     }
 
-    const args = progressCallback
-        ? ['pull', '--progress', remote]
-        : ['pull', remote];
+    const args = ['pull', remote];
+
+    if (branch) {
+        args.push(branch)
+    }
+
+    if (progressCallback) {
+        args.push('--progress');
+    }
 
     const result = await git(args, repositoryPath, 'pull', opts);
 
