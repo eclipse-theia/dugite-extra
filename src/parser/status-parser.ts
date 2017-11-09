@@ -154,9 +154,7 @@ function parseUntrackedEntry(field: string): IStatusEntry {
 export function mapStatus(status: string): FileEntry {
     if (status === '??') {
         return {
-            kind: 'untracked',
-            index: GitStatusEntry.Untracked,
-            workingTree: GitStatusEntry.Untracked,
+            kind: 'untracked'
         }
     }
 
