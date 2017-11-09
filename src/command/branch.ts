@@ -16,6 +16,8 @@ const forEachRefFormat = [
     `%${delimiter}`, // indicate end-of-line as %(body) may contain newlines
 ].join('%00');
 
+export async function listBranch(repositoryPath: string, type: 'current'): Promise<undefined | Branch>;
+export async function listBranch(repositoryPath: string, type: 'local' | 'remote' | 'all'): Promise<Branch[]>;
 export async function listBranch(repositoryPath: string, type: 'current' | 'local' | 'remote' | 'all'): Promise<undefined | Branch | Branch[]> {
     if (type === 'current') {
         const successExitCodes = new Set([0, 1, 128]);
