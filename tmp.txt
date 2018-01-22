@@ -1,0 +1,1 @@
+https://github.com/theia-ide/dugite-extra/new/GH-12
