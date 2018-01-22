@@ -49,6 +49,8 @@ export async function getStatus(repositoryPath: string): Promise<IStatusResult> 
     );
 
     const files = new Array<WorkingDirectoryFileChange>();
+    // https://github.com/theia-ide/dugite-extra/issues/10
+    const existingFiles = new Set<string>();
 
     let currentBranch: string | undefined = undefined;
     let currentUpstreamBranch: string | undefined = undefined;
@@ -76,9 +78,11 @@ export async function getStatus(repositoryPath: string): Promise<IStatusResult> 
                 // same path, we should ensure that we only draw one entry in the
                 // changes list - see if an entry already exists for this path and
                 // remove it if found
-                const existingEntry = files.findIndex(p => p.path === entry.path);
-                if (existingEntry > -1) {
-                    files.splice(existingEntry, 1);
+                if (existingFiles.has(entry.path)) {
+                    const existingEntry = files.findIndex(p => p.path === entry.path);
+                    if (existingEntry > -1) {
+                        files.splice(existingEntry, 1);
+                    }
                 }
             }
 
@@ -100,6 +104,7 @@ export async function getStatus(repositoryPath: string): Promise<IStatusResult> 
                         true
                     )
                 );
+                existingFiles.add(entry.path);
             }
 
             if (changeInWorkingTree) {
@@ -112,6 +117,7 @@ export async function getStatus(repositoryPath: string): Promise<IStatusResult> 
                         false
                     )
                 );
+                existingFiles.add(entry.path);
             }
 
             // Must be untracked
@@ -125,6 +131,7 @@ export async function getStatus(repositoryPath: string): Promise<IStatusResult> 
                         false
                     )
                 );
+                existingFiles.add(entry.path);
             }
 
         } else if (entry.kind === 'header') {

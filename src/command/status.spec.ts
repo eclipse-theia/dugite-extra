@@ -1,17 +1,37 @@
 import * as temp from 'temp';
 import * as path from 'path';
+import * as os from 'os';
+import * as fs from 'fs-extra';
 import { expect } from 'chai';
 import { getStatus } from './status';
 import { FileStatus } from '../model/status';
 import { createTestRepository, add, remove, modify } from './test-helper';
+import { clone } from './clone';
 
 
 const track = temp.track();
 
 describe('status', async () => {
 
+    const repositoryWithChanges = path.join(os.homedir(), '.git');
+
+    before(async () => {
+        if (fs.existsSync(repositoryWithChanges)) {
+            fs.removeSync(repositoryWithChanges);
+        }
+        await clone('https://github.com/eclipse/xtext-core.git', repositoryWithChanges);
+        const tmpPath = path.join(repositoryWithChanges, 'tmp');
+        fs.mkdirpSync(tmpPath);
+        fs.readdirSync(repositoryWithChanges).forEach(fileName => {
+            if (fileName.startsWith('org.eclipse.xtext')) {
+                fs.moveSync(path.join(repositoryWithChanges, fileName), path.join(tmpPath, fileName));
+            }
+        });
+    })
+
     after(async () => {
         track.cleanupSync();
+        fs.removeSync(repositoryWithChanges);
     });
 
     it('missing', async () => {
@@ -61,6 +81,12 @@ describe('status', async () => {
         expect(files).to.have.lengthOf(1);
         expect(files[0].path).to.be.equal(path.relative(repositoryPath, filePaths[0]));
         expect(files[0].status).to.be.equal(FileStatus.Modified);
+    });
+
+    it('in repository with changes', async function () {
+        this.timeout(1000);
+        const status = await getStatus(repositoryWithChanges);
+        expect(status.workingDirectory.files.length > 10000);
     });
 
 });
