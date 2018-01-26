@@ -41,7 +41,7 @@ function isChangeInWorkTree(statusCode: string): boolean {
  *  Retrieve the status for a given repository,
  *  and fail gracefully if the location is not a Git repository
  */
-export async function getStatus(repositoryPath: string): Promise<IStatusResult> {
+export async function getStatus(repositoryPath: string, limit: number = Number.MAX_SAFE_INTEGER): Promise<IStatusResult> {
     const result = await git(
         ['status', '--untracked-files=all', '--branch', '--porcelain=2', '-z'],
         repositoryPath,
@@ -57,7 +57,8 @@ export async function getStatus(repositoryPath: string): Promise<IStatusResult> 
     let currentTip: string | undefined = undefined;
     let branchAheadBehind: IAheadBehind | undefined = undefined;
 
-    for (const entry of parsePorcelainStatus(result.stdout)) {
+    const { entries, incomplete } = parsePorcelainStatus(result.stdout, limit);
+    for (const entry of entries) {
         if (entry.kind === 'entry') {
             const status = mapStatus(entry.statusCode);
 
@@ -167,5 +168,6 @@ export async function getStatus(repositoryPath: string): Promise<IStatusResult> 
         branchAheadBehind,
         exists: true,
         workingDirectory,
+        incomplete
     };
 }

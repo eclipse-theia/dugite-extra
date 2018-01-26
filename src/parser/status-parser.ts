@@ -29,8 +29,9 @@ const IgnoredEntryType = '!'
 
 /** Parses output from git status --porcelain -z into file status entries */
 export function parsePorcelainStatus(
-    output: string
-): ReadonlyArray<StatusItem> {
+    output: string,
+    limit: number = Number.MAX_SAFE_INTEGER
+): { entries: ReadonlyArray<StatusItem>, incomplete: boolean } {
     const entries = new Array<StatusItem>()
 
     // See https://git-scm.com/docs/git-status
@@ -49,6 +50,8 @@ export function parsePorcelainStatus(
 
     const fields = output.split('\0')
     let field: string | undefined
+    let limitCounter = 0;
+    let incomplete = false;
 
     while ((field = fields.shift())) {
         if (field.startsWith('# ') && field.length > 2) {
@@ -56,6 +59,10 @@ export function parsePorcelainStatus(
             continue
         }
 
+        if (limitCounter === limit) {
+            incomplete = true;
+            break;
+        }
         const entryKind = field.substr(0, 1)
 
         if (entryKind === ChangedEntryType) {
@@ -69,9 +76,10 @@ export function parsePorcelainStatus(
         } else if (entryKind === IgnoredEntryType) {
             // Ignored, we don't care about these for now
         }
+        limitCounter++;
     }
 
-    return entries
+    return { entries, incomplete };
 }
 
 // 1 <XY> <sub> <mH> <mI> <mW> <hH> <hI> <path>

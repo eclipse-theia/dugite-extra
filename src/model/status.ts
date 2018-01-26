@@ -98,6 +98,11 @@ export interface IStatusResult {
      * The absolute path to the repository's working directory.
      */
     readonly workingDirectory: WorkingDirectoryStatus
+
+    /**
+     * `true` if a limit was specified and reached during get `git status`, so this result is not complete. Otherwise, (including `undefined`) is complete.
+     */
+    readonly incomplete?: boolean;
 }
 
 /**

@@ -87,6 +87,14 @@ describe('status', async () => {
         this.timeout(1000);
         const status = await getStatus(repositoryWithChanges);
         expect(status.workingDirectory.files.length > 10000);
+        expect(!!status.incomplete).to.be.false;
+    });
+
+    it('limit changes', async function () {
+        this.timeout(1000);
+        const status = await getStatus(repositoryWithChanges, 500);
+        expect(status.workingDirectory.files.length === 500);
+        expect(status.incomplete).to.be.true;
     });
 
 });
