@@ -15,7 +15,8 @@ describe('status', async () => {
 
     const repositoryWithChanges = path.join(os.homedir(), '.git');
 
-    before(async () => {
+    before(async function () {
+        this.timeout(80000);
         if (fs.existsSync(repositoryWithChanges)) {
             fs.removeSync(repositoryWithChanges);
         }
