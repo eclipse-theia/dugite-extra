@@ -21,18 +21,14 @@ const binaryEncoding: (process: ChildProcess) => void = cb => cb.stdout.setEncod
  * @param commitish  - A commit SHA or some other identifier that ultimately dereferences to a commit/tree. `HEAD` is the `HEAD`. If empty string, shows the index state.
  * @param path       - The absolute FS path which is contained in the repository.
  */
-export async function getTextContents(repositoryPath: string, commitish: string, path: string, exitCodes: Set<number> = successExitCodes): Promise<Buffer | undefined> {
+export async function getTextContents(repositoryPath: string, commitish: string, path: string): Promise<Buffer> {
     const args = ['show', `${commitish}:${normalizeSafe(relative(repositoryPath, path))}`];
     const opts = {
-        successExitCodes: exitCodes,
+        successExitCodes,
         processCallback: utf8Encoding,
     };
-    const result = await git(args, repositoryPath, 'getTextContents', opts);
-    const { exitCode, stdout } = result;
-    if (!successExitCodes.has(exitCode) && exitCodes.has(exitCode)) {
-        return undefined;
-    }
-    return Buffer.from(stdout, 'utf8');
+    const textContents = await git(args, repositoryPath, 'getTextContents', opts);
+    return Buffer.from(textContents.stdout, 'utf8');
 }
 
 /**
@@ -47,16 +43,12 @@ export async function getTextContents(repositoryPath: string, commitish: string,
  * @param commitish  - A commit SHA or some other identifier that ultimately dereferences to a commit/tree. `HEAD` is the `HEAD`. If empty string, shows the index state.
  * @param path       - The absolute FS path which is contained in the repository.
  */
-export async function getBlobContents(repositoryPath: string, commitish: string, path: string, exitCodes: Set<number> = successExitCodes): Promise<Buffer | undefined> {
+export async function getBlobContents(repositoryPath: string, commitish: string, path: string): Promise<Buffer> {
     const args = ['show', `${commitish}:${path}`];
     const opts = {
-        successExitCodes: exitCodes,
+        successExitCodes,
         processCallback: binaryEncoding,
     };
-    const result = await git(args, repositoryPath, 'getBlobContents', opts);
-    const { exitCode, stdout } = result;
-    if (!successExitCodes.has(exitCode) && exitCodes.has(exitCode)) {
-        return undefined;
-    }
-    return Buffer.from(stdout, 'binary');
+    const blobContents = await git(args, repositoryPath, 'getBlobContents', opts);
+    return Buffer.from(blobContents.stdout, 'binary');
 }

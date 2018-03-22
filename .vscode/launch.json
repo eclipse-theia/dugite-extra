@@ -6,24 +6,24 @@
     "configurations": [
         {
             "type": "node",
-            "runtimeArgs": [
-                "--inspect"
-            ],
             "request": "launch",
             "protocol": "inspector",
             "name": "Run Mocha Test",
             "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
             "args": [
-                "--timeout",
-                "999999",
-                "--colors",
                 "${file}",
+                "--no-timeouts",
+                "--colors",
                 "--opts",
                 "${workspaceRoot}/mocha.opts"
             ],
+            "env": {
+                "TS_NODE_PROJECT": "${workspaceRoot}/tsconfig.json"
+            },
             "sourceMaps": true,
+            "smartStep": true,
             "internalConsoleOptions": "openOnSessionStart",
-            "port": 9229
+            "outputCapture": "std"
         }
     ]
 }

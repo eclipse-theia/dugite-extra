@@ -168,7 +168,7 @@ export async function getBlobImage(repositoryPath: string, path: string, commiti
     const extension = Path.extname(path);
     const contents = await getBlobContents(repositoryPath, commitish, path);
     return {
-        contents: contents!.toString('base64'),
+        contents: contents.toString('base64'),
         mediaType: getMediaType(extension),
     };
 }

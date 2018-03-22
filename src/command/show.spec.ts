@@ -12,7 +12,7 @@ const track = temp.track();
 
 describe('show', async () => {
 
-    afterEach(async () => {
+    after(async () => {
         track.cleanupSync();
     });
 
@@ -38,10 +38,10 @@ describe('show', async () => {
         let SHAs = await logCommitSHAs(repositoryPath, fileName);
         expect(SHAs).to.be.lengthOf(3);
         let [HEAD, second, first] = SHAs;
-        expect((await getTextContents(repositoryPath, HEAD, fileName))!.toString()).to.be.equal('third commit');
-        expect((await getTextContents(repositoryPath, second, fileName))!.toString()).to.be.equal('second commit');
-        expect((await getTextContents(repositoryPath, first, fileName))!.toString()).to.be.equal('A');
-        expect((await getTextContents(repositoryPath, 'HEAD', fileName))!.toString()).to.be.equal('third commit');
+        expect((await getTextContents(repositoryPath, HEAD, fileName)).toString()).to.be.equal('third commit');
+        expect((await getTextContents(repositoryPath, second, fileName)).toString()).to.be.equal('second commit');
+        expect((await getTextContents(repositoryPath, first, fileName)).toString()).to.be.equal('A');
+        expect((await getTextContents(repositoryPath, 'HEAD', fileName)).toString()).to.be.equal('third commit');
 
         fs.writeFileSync(fileName, 'just staged', { encoding: 'utf8' });
         expect(fs.readFileSync(fileName, { encoding: 'utf8' })).to.be.equal('just staged');
@@ -53,44 +53,26 @@ describe('show', async () => {
         SHAs = await logCommitSHAs(repositoryPath, fileName);
         expect(SHAs).to.be.lengthOf(3);
         [HEAD, second, first] = SHAs;
-        expect((await getTextContents(repositoryPath, HEAD, fileName))!.toString()).to.be.equal('third commit');
-        expect((await getTextContents(repositoryPath, second, fileName))!.toString()).to.be.equal('second commit');
-        expect((await getTextContents(repositoryPath, first, fileName))!.toString()).to.be.equal('A');
-        expect((await getTextContents(repositoryPath, 'HEAD', fileName))!.toString()).to.be.equal('third commit');
-        expect((await getTextContents(repositoryPath, 'HEAD~1', fileName))!.toString()).to.be.equal('second commit');
-        expect((await getTextContents(repositoryPath, 'HEAD~2', fileName))!.toString()).to.be.equal('A');
-        expect((await getTextContents(repositoryPath, `${HEAD}~1`, fileName))!.toString()).to.be.equal('second commit');
-        expect((await getTextContents(repositoryPath, `${HEAD}~2`, fileName))!.toString()).to.be.equal('A');
-        expect((await getTextContents(repositoryPath, '', fileName))!.toString()).to.be.equal('just staged');
+        expect((await getTextContents(repositoryPath, HEAD, fileName)).toString()).to.be.equal('third commit');
+        expect((await getTextContents(repositoryPath, second, fileName)).toString()).to.be.equal('second commit');
+        expect((await getTextContents(repositoryPath, first, fileName)).toString()).to.be.equal('A');
+        expect((await getTextContents(repositoryPath, 'HEAD', fileName)).toString()).to.be.equal('third commit');
+        expect((await getTextContents(repositoryPath, 'HEAD~1', fileName)).toString()).to.be.equal('second commit');
+        expect((await getTextContents(repositoryPath, 'HEAD~2', fileName)).toString()).to.be.equal('A');
+        expect((await getTextContents(repositoryPath, `${HEAD}~1`, fileName)).toString()).to.be.equal('second commit');
+        expect((await getTextContents(repositoryPath, `${HEAD}~2`, fileName)).toString()).to.be.equal('A');
+        expect((await getTextContents(repositoryPath, '', fileName)).toString()).to.be.equal('just staged');
 
         const nestedFileName = Path.join(repositoryPath, 'folder', 'C.txt');
         expect(fs.readFileSync(nestedFileName, { encoding: 'utf8' })).to.be.equal('C');
-        expect((await getTextContents(repositoryPath, 'HEAD', nestedFileName))!.toString()).to.be.equal('C');
+        expect((await getTextContents(repositoryPath, 'HEAD', nestedFileName)).toString()).to.be.equal('C');
         fs.writeFileSync(nestedFileName, 'some other content', { encoding: 'utf8' });
         expect(fs.readFileSync(nestedFileName, { encoding: 'utf8' })).to.be.equal('some other content');
-        expect((await getTextContents(repositoryPath, 'HEAD', nestedFileName))!.toString()).to.be.equal('C');
-        expect((await getTextContents(repositoryPath, '', nestedFileName))!.toString()).to.be.equal('C');
+        expect((await getTextContents(repositoryPath, 'HEAD', nestedFileName)).toString()).to.be.equal('C');
+        expect((await getTextContents(repositoryPath, '', nestedFileName)).toString()).to.be.equal('C');
         await stage(repositoryPath, nestedFileName);
-        expect((await getTextContents(repositoryPath, 'HEAD', nestedFileName))!.toString()).to.be.equal('C');
-        expect((await getTextContents(repositoryPath, '', nestedFileName))!.toString()).to.be.equal('some other content');
-    });
-
-    it('show - not under version control with default error codes', async () => {
-        const repositoryPath = track.mkdirSync('show-repository-path');
-        await createTestRepository(repositoryPath);
-        try {
-            await getTextContents(repositoryPath, 'HEAD', 'missingFile');
-            throw new Error(`Expected unhandled exit code when executing 'git show' for a file that is not under version control.`);
-        } catch (e) {
-            expect(e.message).to.contains(`missingFile' is outside repository`);
-        }
-    });
-
-    it('show - not under version control with custom error codes', async () => {
-        const repositoryPath = track.mkdirSync('show-repository-path');
-        await createTestRepository(repositoryPath);
-        const result = await getTextContents(repositoryPath, 'HEAD', 'missingFile', new Set([0, 1, 128]));
-        expect(result).to.be.undefined;
+        expect((await getTextContents(repositoryPath, 'HEAD', nestedFileName)).toString()).to.be.equal('C');
+        expect((await getTextContents(repositoryPath, '', nestedFileName)).toString()).to.be.equal('some other content');
     });
 
 });
