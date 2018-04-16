@@ -76,7 +76,8 @@ async function getBranches(repositoryPath: string, ...prefixes: string[]): Promi
     if (!prefixes || !prefixes.length) {
         prefixes = ['refs/heads', 'refs/remotes'];
     }
-    const args = ['for-each-ref', `--format=${forEachRefFormat}`, ...prefixes];
+    // Branches are ordered by their commit date, in inverse chronological order. The first item is the most recent.
+    const args = ['for-each-ref', `--format=${forEachRefFormat}`, '--sort=-committerdate', ...prefixes];
     const result = await git(args, repositoryPath, 'getBranches');
     const names = result.stdout;
     const lines = names.split(delimiterString);
