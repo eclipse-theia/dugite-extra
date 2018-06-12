@@ -87,6 +87,35 @@ describe('stage', async () => {
             expect(files[0].staged).to.be.true;
         });
 
+        it('stage multiple files', async () => {
+            const repositoryPath = await createTestRepository(track.mkdirSync());
+            const filePaths = add(repositoryPath, [{ path: 'X.txt' }, { path: 'Y.txt' }]);
+
+            const beforeStatus = await getStatus(repositoryPath);
+            let files = beforeStatus.workingDirectory.files;
+            expect(files).to.have.lengthOf(2);
+            expect(files[0].path).to.be.equal(path.relative(repositoryPath, filePaths[0]));
+            expect(files[0].status).to.be.equal(FileStatus.New);
+            expect(files[0].staged).to.be.false;
+
+            expect(files[1].path).to.be.equal(path.relative(repositoryPath, filePaths[1]));
+            expect(files[1].status).to.be.equal(FileStatus.New);
+            expect(files[1].staged).to.be.false;
+
+            await stage(repositoryPath);
+            const afterStatus = await getStatus(repositoryPath);
+
+            files = afterStatus.workingDirectory.files;
+            expect(files).to.have.lengthOf(2);
+            expect(files[0].path).to.be.equal(path.relative(repositoryPath, filePaths[0]));
+            expect(files[0].status).to.be.equal(FileStatus.New);
+            expect(files[0].staged).to.be.true;
+
+            expect(files[1].path).to.be.equal(path.relative(repositoryPath, filePaths[1]));
+            expect(files[1].status).to.be.equal(FileStatus.New);
+            expect(files[1].staged).to.be.true;
+        });
+
     });
 
     describe('getStagedFiles', async () => {
@@ -122,7 +151,7 @@ describe('stage', async () => {
         });
 
         it('modifying a staged file should result in two changes', async () => {
-            const repositoryPath = await createTestRepository(track.mkdirSync('foo'));
+            const repositoryPath = await createTestRepository(track.mkdirSync());
 
             await stage(repositoryPath, modify(repositoryPath, { path: 'A.txt', data: 'new content' }));
             const stagedFiles = await getStagedFiles(repositoryPath);
@@ -138,6 +167,62 @@ describe('stage', async () => {
             expect(changedFiles).to.be.lengthOf(2);
             expect(changedFiles.map(f => f.path)).to.deep.equal(['A.txt', 'A.txt']);
             expect(changedFiles.map(f => f.staged).sort()).to.deep.equal([false, true]);
+        });
+
+        it('reverting the index state should not modify the working tree', async () => {
+            const repositoryPath = await createTestRepository(track.mkdirSync());
+
+            await stage(repositoryPath, modify(repositoryPath, { path: 'A.txt', data: 'A\nModification in the index' }));
+            const stagedFiles = await getStagedFiles(repositoryPath);
+            expect(stagedFiles).to.be.lengthOf(1);
+            expect(stagedFiles.map(f => f.path)).to.deep.equal(['A.txt']);
+
+            const thePath = modify(repositoryPath, { path: 'A.txt', data: 'A\nModification in the index\nAnother modification in the working tree' })[0];
+            expect(fs.readFileSync(path.join(repositoryPath, 'A.txt'), 'utf8')).to.be.deep.equal('A\nModification in the index\nAnother modification in the working tree');
+
+            const status = await getStatus(repositoryPath);
+            const changedFiles = status.workingDirectory.files;
+            expect(changedFiles).to.be.lengthOf(2);
+            expect(changedFiles.map(f => f.path)).to.deep.equal(['A.txt', 'A.txt']);
+            expect(changedFiles.map(f => f.staged).sort()).to.deep.equal([false, true]);
+
+            await unstage(repositoryPath, thePath, 'HEAD', 'index');
+
+            const afterStatus = await getStatus(repositoryPath);
+            const afterChangedFiles = afterStatus.workingDirectory.files;
+            expect(afterChangedFiles).to.be.lengthOf(1);
+            expect(afterChangedFiles.map(f => f.path)).to.deep.equal(['A.txt']);
+            expect(afterChangedFiles.map(f => f.staged)).to.deep.equal([false]);
+
+            expect(fs.readFileSync(path.join(repositoryPath, 'A.txt'), 'utf8')).to.be.deep.equal('A\nModification in the index\nAnother modification in the working tree');
+        });
+
+        it('reverting the state in the working tree should not modify the index state', async () => {
+            const repositoryPath = await createTestRepository(track.mkdirSync());
+
+            await stage(repositoryPath, modify(repositoryPath, { path: 'A.txt', data: 'A\nModification in the index' }));
+            const stagedFiles = await getStagedFiles(repositoryPath);
+            expect(stagedFiles).to.be.lengthOf(1);
+            expect(stagedFiles.map(f => f.path)).to.deep.equal(['A.txt']);
+
+            const thePath = modify(repositoryPath, { path: 'A.txt', data: 'A\nModification in the index\nAnother modification in the working tree' })[0];
+            expect(fs.readFileSync(path.join(repositoryPath, 'A.txt'), 'utf8')).to.be.deep.equal('A\nModification in the index\nAnother modification in the working tree');
+
+            const status = await getStatus(repositoryPath);
+            const changedFiles = status.workingDirectory.files;
+            expect(changedFiles).to.be.lengthOf(2);
+            expect(changedFiles.map(f => f.path)).to.deep.equal(['A.txt', 'A.txt']);
+            expect(changedFiles.map(f => f.staged).sort()).to.deep.equal([false, true]);
+
+            await unstage(repositoryPath, thePath, 'HEAD', 'working-tree');
+
+            const afterStatus = await getStatus(repositoryPath);
+            const afterChangedFiles = afterStatus.workingDirectory.files;
+            expect(afterChangedFiles).to.be.lengthOf(1);
+            expect(afterChangedFiles.map(f => f.path)).to.deep.equal(['A.txt']);
+            expect(afterChangedFiles.map(f => f.staged)).to.deep.equal([true]);
+
+            expect(fs.readFileSync(path.join(repositoryPath, 'A.txt'), 'utf8')).to.be.deep.equal('A\nModification in the index');
         });
 
     });
