@@ -151,6 +151,13 @@ async function splitPath(path: string): Promise<string[]> {
     return !parts[0].length ? parts.slice(1) : parts;
 }
 
+export async function gitVersion(): Promise<string> {
+    await initGitEnv();
+    await configureGitEnv();
+    const { stdout } = await GitProcess.exec(['--version'], '') || '';
+    return stdout.trim();
+}
+
 async function initGitEnv() {
     if (process.env.USE_LOCAL_GIT === 'true' && !process.env.LOCAL_GIT_DIRECTORY && !process.env.GIT_EXEC_PATH && !__GIT_PATH__.searched) {
         console.log(`'USE_LOCAL_GIT' is set to true. Trying to use local Git for 'dugite' execution.`);
