@@ -1,4 +1,4 @@
-import { git } from '../core/git';
+import { git, gitVersion } from '../core/git';
 import { parsePorcelainStatus, mapStatus } from '../parser/status-parser';
 import { DiffSelectionType, DiffSelection } from '../model/diff';
 import { IStatusResult, IAheadBehind, WorkingDirectoryStatus, WorkingDirectoryFileChange, AppFileStatus, FileEntry, GitStatusEntry } from '../model/status';
@@ -41,9 +41,46 @@ function isChangeInWorkTree(statusCode: string): boolean {
  *  Retrieve the status for a given repository,
  *  and fail gracefully if the location is not a Git repository
  */
-export async function getStatus(repositoryPath: string, limit: number = Number.MAX_SAFE_INTEGER): Promise<IStatusResult> {
+export async function getStatus(repositoryPath: string, noOptionalLocks: boolean = true, limit: number = Number.MAX_SAFE_INTEGER): Promise<IStatusResult> {
+    const args: string[] = [];
+    if (noOptionalLocks) {
+        // We need to check if the configured git version can use it or not. It is supported from 2.15.0
+        if (typeof process.env.GIT__CAN_USE_NO_OPTIONAL_LOCKS === 'undefined') {
+            console.info(`Checking whether '--noOptionalLocks' can be used with the current Git executable. Minimum required version is '2.15.0'.`);
+            let version: string | undefined;
+            let canUseNoOptionalLocks = false;
+            try {
+                version = await gitVersion();
+            } catch (e) {
+                console.error('Error ocurred when determining the Git version.', e);
+            }
+            if (!version) {
+                console.warn(`Cannot determine the Git version. Disabling '--noOptionalLocks' for all subsequent calls.`);
+            } else {
+                const parsed = version.replace(/^git version /, '');
+                const [rawMajor, rawMinor] = parsed.split('.');
+                if (rawMajor && rawMinor) {
+                    const major = parseInt(rawMajor, 10);
+                    const minor = parseInt(rawMinor, 10);
+                    if (Number.isInteger(major) && Number.isInteger(minor)) {
+                        canUseNoOptionalLocks = major >= 2 && minor >= 15;
+                    }
+                }
+                if (!canUseNoOptionalLocks) {
+                    console.warn(`Git version was: '${parsed}'. Disabling '--noOptionalLocks' for all subsequent calls.`);
+                } else {
+                    console.info(`'--noOptionalLocks' is a valid Git option for the current Git version: '${parsed}'.`);
+                }
+            }
+            process.env.GIT__CAN_USE_NO_OPTIONAL_LOCKS = `${canUseNoOptionalLocks}`;
+        }
+        if (process.env.GIT__CAN_USE_NO_OPTIONAL_LOCKS === 'true') {
+            args.push('--no-optional-locks');
+        }
+    }
+    args.push('status', '--untracked-files=all', '--branch', '--porcelain=2', '-z');
     const result = await git(
-        ['status', '--untracked-files=all', '--branch', '--porcelain=2', '-z'],
+        args,
         repositoryPath,
         'getStatus'
     );

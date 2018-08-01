@@ -93,7 +93,7 @@ describe('status', async () => {
 
     it('limit changes', async function () {
         this.timeout(1000);
-        const status = await getStatus(repositoryWithChanges, 500);
+        const status = await getStatus(repositoryWithChanges, false, 500);
         expect(status.workingDirectory.files.length === 500);
         expect(status.incomplete).to.be.true;
     });
