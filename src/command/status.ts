@@ -46,7 +46,7 @@ export async function getStatus(repositoryPath: string, noOptionalLocks: boolean
     if (noOptionalLocks) {
         // We need to check if the configured git version can use it or not. It is supported from 2.15.0
         if (typeof process.env.GIT__CAN_USE_NO_OPTIONAL_LOCKS === 'undefined') {
-            console.info(`Checking whether '--noOptionalLocks' can be used with the current Git executable. Minimum required version is '2.15.0'.`);
+            console.info(`Checking whether '--no-optional-locks' can be used with the current Git executable. Minimum required version is '2.15.0'.`);
             let version: string | undefined;
             let canUseNoOptionalLocks = false;
             try {
@@ -55,7 +55,7 @@ export async function getStatus(repositoryPath: string, noOptionalLocks: boolean
                 console.error('Error ocurred when determining the Git version.', e);
             }
             if (!version) {
-                console.warn(`Cannot determine the Git version. Disabling '--noOptionalLocks' for all subsequent calls.`);
+                console.warn(`Cannot determine the Git version. Disabling '--no-optional-locks' for all subsequent calls.`);
             } else {
                 const parsed = version.replace(/^git version /, '');
                 const [rawMajor, rawMinor] = parsed.split('.');
@@ -67,9 +67,9 @@ export async function getStatus(repositoryPath: string, noOptionalLocks: boolean
                     }
                 }
                 if (!canUseNoOptionalLocks) {
-                    console.warn(`Git version was: '${parsed}'. Disabling '--noOptionalLocks' for all subsequent calls.`);
+                    console.warn(`Git version was: '${parsed}'. Disabling '--no-optional-locks' for all subsequent calls.`);
                 } else {
-                    console.info(`'--noOptionalLocks' is a valid Git option for the current Git version: '${parsed}'.`);
+                    console.info(`'--no-optional-locks' is a valid Git option for the current Git version: '${parsed}'.`);
                 }
             }
             process.env.GIT__CAN_USE_NO_OPTIONAL_LOCKS = `${canUseNoOptionalLocks}`;
