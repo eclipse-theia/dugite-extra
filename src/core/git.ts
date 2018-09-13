@@ -1,6 +1,14 @@
 import * as fs from 'fs';
+import * as path from 'path';
 import findGit from 'find-git-exec';
-import { GitProcess, IGitResult as DugiteResult, GitError as DugiteError, IGitExecutionOptions as DugiteExecutionOptions } from 'dugite';
+import {
+    GitProcess,
+    IGitResult as DugiteResult,
+    GitError as DugiteError,
+    IGitExecutionOptions as DugiteExecutionOptions,
+    RepositoryDoesNotExistErrorCode,
+    GitNotFoundErrorCode
+} from 'dugite';
 
 // tslint:disable:max-line-length
 const __GIT_PATH__: { gitDir: string | undefined, gitExecPath: string | undefined, searched: boolean } = { gitDir: undefined, gitExecPath: undefined, searched: false };
@@ -23,6 +31,19 @@ export interface IGitExecutionOptions extends DugiteExecutionOptions {
      * be logged and an error thrown.
      */
     readonly expectedErrors?: ReadonlySet<DugiteError>
+
+    /**
+     * `path` is equivalent to `cwd`.
+     * If the `exec` function is set:
+     *   - then this will be called instead of the `child_process.execFile`. Clients will **not** have access to the `stdin`.
+     *   - then the `USE_LOCAL_GIT` must be set to `"true"`. Otherwise, an error will be thrown.
+     *   - the all other properties defined by this option will be ignored except the `env` property.
+     */
+    readonly exec?: IGitExecutionOptions.ExecFunc;
+}
+
+export namespace IGitExecutionOptions {
+    export type ExecFunc = (args: string[], options: { cwd: string, env?: Object }, callback: (error: Error | null, stdout: string, stderr: string) => void) => void;
 }
 
 /**
@@ -72,6 +93,83 @@ export class GitError extends Error {
     }
 }
 
+function pathExists(path: string): Boolean {
+    try {
+        fs.accessSync(path, (fs as any).F_OK)
+        return true
+    } catch {
+        return false
+    }
+}
+
+function gitExternal(args: string[], path: string, options: IGitExecutionOptions): Promise<DugiteResult> {
+    if (options.exec === undefined) {
+        throw new Error(`options.exec must be defined.`);
+    }
+    // XXX: this is just to keep the original code from here https://github.com/desktop/dugite/blob/master/lib/git-process.ts#L172-L227
+    const maxBuffer = options.maxBuffer ? options.maxBuffer : 10 * 1024 * 1024;
+    const { exec } = options;
+    return new Promise<DugiteResult>((resolve, reject) => {
+        exec(args, { cwd: path, env: options.env }, (err: Error | null, stdout: string, stderr: string) => {
+            if (!err) {
+                resolve({ stdout, stderr, exitCode: 0 })
+                return
+            }
+
+            const errWithCode = err as (Error & { code: number | string | undefined })
+
+            let code = errWithCode.code
+
+            // If the error's code is a string then it means the code isn't the
+            // process's exit code but rather an error coming from Node's bowels,
+            // e.g., ENOENT.
+            if (typeof code === 'string') {
+                if (code === 'ENOENT') {
+                    let message = err.message
+                    if (pathExists(path) === false) {
+                        message = 'Unable to find path to repository on disk.'
+                        code = RepositoryDoesNotExistErrorCode
+                    } else {
+                        message = `Git could not be found at the expected path: '${
+                            process.env.LOCAL_GIT_DIRECTORY
+                            }'. This might be a problem with how the application is packaged, so confirm this folder hasn't been removed when packaging.`
+                        code = GitNotFoundErrorCode
+                    }
+
+                    const error = new Error(message) as (Error & { code: number | string | undefined })
+                    error.name = err.name
+                    error.code = code
+                    reject(error)
+                } else {
+                    reject(err)
+                }
+
+                return
+            }
+
+            if (typeof code === 'number') {
+                resolve({ stdout, stderr, exitCode: code })
+                return
+            }
+
+            // Git has returned an output that couldn't fit in the specified buffer
+            // as we don't know how many bytes it requires, rethrow the error with
+            // details about what it was previously set to...
+            if (err.message === 'stdout maxBuffer exceeded') {
+                reject(
+                    new Error(
+                        `The output from the command could not fit into the allocated stdout buffer. Set options.maxBuffer to a larger value than ${
+                        maxBuffer
+                        } bytes`
+                    )
+                )
+            } else {
+                reject(err)
+            }
+        });
+    });
+}
+
 /**
  * Shell out to git with the given arguments, at the given path.
  *
@@ -93,16 +191,28 @@ export class GitError extends Error {
  */
 export async function git(args: string[], path: string, name: string, options?: IGitExecutionOptions): Promise<IGitResult> {
 
-    let defaultOptions: IGitExecutionOptions = {
+    if (
+        options
+        && options.exec
+        && (typeof process.env.LOCAL_GIT_DIRECTORY === 'undefined' || typeof process.env.GIT_EXEC_PATH === 'undefined')) {
+        throw new Error('LOCAL_GIT_DIRECTORY and GIT_EXEC_PATH must be specified when using an exec function.');
+    }
+
+    const defaultOptions: IGitExecutionOptions = {
         successExitCodes: new Set([0]),
         expectedErrors: new Set(),
     }
 
-    await initGitEnv();
-    await configureGitEnv();
-
     const opts = { ...defaultOptions, ...options }
-    const result = await GitProcess.exec(args, path, options);
+    let result: DugiteResult;
+    if (options && options.exec) {
+        result = await gitExternal(args, path, options);
+    } else {
+        await initGitEnv();
+        await configureGitEnv();
+        result = await GitProcess.exec(args, path, options);
+    }
+
     const exitCode = result.exitCode
 
     let gitError: DugiteError | undefined = undefined
@@ -142,19 +252,10 @@ export async function git(args: string[], path: string, name: string, options?: 
     throw new GitError(gitResult, args)
 }
 
-async function splitPath(path: string): Promise<string[]> {
-    const parts = path.split(/(\/|\\)/);
-    if (!parts.length) {
-        return parts;
-    }
-    // When the `path` starts with a slash, the the first part is empty string.
-    return !parts[0].length ? parts.slice(1) : parts;
-}
-
-export async function gitVersion(): Promise<string> {
+export async function gitVersion(options?: IGitExecutionOptions): Promise<string> {
     await initGitEnv();
     await configureGitEnv();
-    const { stdout } = await GitProcess.exec(['--version'], '') || '';
+    const { stdout } = await GitProcess.exec(['--version'], '', options) || '';
     return stdout.trim();
 }
 
@@ -165,9 +266,9 @@ async function initGitEnv() {
             const git = await findGit();
             if (git && git.path && git.execPath) {
                 // We need to traverse up two levels to get the expected Git directory.
+                // `dugite` expects the directory path instead of the executable path.
                 // https://github.com/desktop/dugite/issues/111
-                const segments = await splitPath(git.path);
-                const gitDir = segments.slice(0, segments.length - 4).join('');
+                const gitDir = path.dirname(path.dirname(git.path));
                 if (fs.existsSync(gitDir) && fs.existsSync(git.execPath)) {
                     __GIT_PATH__.gitDir = gitDir;
                     __GIT_PATH__.gitExecPath = git.execPath;

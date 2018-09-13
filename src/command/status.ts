@@ -1,4 +1,4 @@
-import { git, gitVersion } from '../core/git';
+import { git, gitVersion, IGitExecutionOptions } from '../core/git';
 import { parsePorcelainStatus, mapStatus } from '../parser/status-parser';
 import { DiffSelectionType, DiffSelection } from '../model/diff';
 import { IStatusResult, IAheadBehind, WorkingDirectoryStatus, WorkingDirectoryFileChange, AppFileStatus, FileEntry, GitStatusEntry } from '../model/status';
@@ -41,7 +41,12 @@ function isChangeInWorkTree(statusCode: string): boolean {
  *  Retrieve the status for a given repository,
  *  and fail gracefully if the location is not a Git repository
  */
-export async function getStatus(repositoryPath: string, noOptionalLocks: boolean = true, limit: number = Number.MAX_SAFE_INTEGER): Promise<IStatusResult> {
+export async function getStatus(
+    repositoryPath: string,
+    noOptionalLocks: boolean = true,
+    limit: number = Number.MAX_SAFE_INTEGER,
+    options?: IGitExecutionOptions): Promise<IStatusResult> {
+
     const args: string[] = [];
     if (noOptionalLocks) {
         // We need to check if the configured git version can use it or not. It is supported from 2.15.0
@@ -50,7 +55,7 @@ export async function getStatus(repositoryPath: string, noOptionalLocks: boolean
             let version: string | undefined;
             let canUseNoOptionalLocks = false;
             try {
-                version = await gitVersion();
+                version = await gitVersion(options);
             } catch (e) {
                 console.error('Error ocurred when determining the Git version.', e);
             }
@@ -82,7 +87,8 @@ export async function getStatus(repositoryPath: string, noOptionalLocks: boolean
     const result = await git(
         args,
         repositoryPath,
-        'getStatus'
+        'getStatus',
+        options
     );
 
     const files = new Array<WorkingDirectoryFileChange>();

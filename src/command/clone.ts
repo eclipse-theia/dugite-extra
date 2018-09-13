@@ -23,7 +23,7 @@ export type CloneOptions = {
  *                  existing directory is only allowed if the directory is
  *                  empty.
  *
- * @param options  - Options specific to the clone operation, see the
+ * @param cloneOptions  - Options specific to the clone operation, see the
  *                   documentation for CloneOptions for more details.
  *
  * @param progressCallback - An optional function which will be invoked
@@ -33,13 +33,23 @@ export type CloneOptions = {
  *                           'git clone'.
  *
  */
-export async function clone(url: string, path: string, options: CloneOptions = {}, progressCallback?: (progress: ICloneProgress) => void): Promise<void> {
+export async function clone(
+    url: string,
+    path: string,
+    cloneOptions: CloneOptions = {},
+    options?: IGitExecutionOptions,
+    progressCallback?: (progress: ICloneProgress) => void): Promise<void> {
 
     const args = [
         'clone', '--recursive', '--progress',
     ];
 
     let opts: IGitExecutionOptions = {};
+    if (options) {
+        opts = {
+            ...options
+        };
+    }
 
     if (progressCallback) {
         args.push('--progress');
@@ -60,8 +70,8 @@ export async function clone(url: string, path: string, options: CloneOptions = {
         progressCallback({ kind, title, value: 0 });
     }
 
-    if (options.branch) {
-        args.push('-b', options.branch);
+    if (cloneOptions.branch) {
+        args.push('-b', cloneOptions.branch);
     }
 
     args.push('--', url, path);

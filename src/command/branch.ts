@@ -1,4 +1,4 @@
-import { git } from '../core/git';
+import { git, IGitExecutionOptions } from '../core/git';
 import { Branch, BranchType } from '../model/branch';
 import { CommitIdentity } from '../model/commit-identity';
 
@@ -16,12 +16,21 @@ const forEachRefFormat = [
     `%${delimiter}`, // indicate end-of-line as %(body) may contain newlines
 ].join('%00');
 
-export async function listBranch(repositoryPath: string, type: 'current'): Promise<undefined | Branch>;
-export async function listBranch(repositoryPath: string, type: 'local' | 'remote' | 'all'): Promise<Branch[]>;
-export async function listBranch(repositoryPath: string, type: 'current' | 'local' | 'remote' | 'all'): Promise<undefined | Branch | Branch[]> {
+export async function listBranch(repositoryPath: string, type: 'current', options?: IGitExecutionOptions): Promise<undefined | Branch>;
+export async function listBranch(repositoryPath: string, type: 'local' | 'remote' | 'all', options?: IGitExecutionOptions): Promise<Branch[]>;
+export async function listBranch(repositoryPath: string, type: 'current' | 'local' | 'remote' | 'all', options?: IGitExecutionOptions): Promise<undefined | Branch | Branch[]> {
     if (type === 'current') {
-        const successExitCodes = new Set([0, 1, 128]);
-        const result = await git(['rev-parse', '--abbrev-ref', 'HEAD'], repositoryPath, 'getCurrentBranch', { successExitCodes });
+        let opts = {};
+        if (options) {
+            opts = {
+                ...opts
+            };
+        }
+        opts = {
+            ...opts,
+            successExitCodes: new Set([0, 1, 128])
+        }
+        const result = await git(['rev-parse', '--abbrev-ref', 'HEAD'], repositoryPath, 'getCurrentBranch', opts);
         const { exitCode } = result;
         // If the error code 1 is returned if no upstream.
         // If the error code 128 is returned if the branch is unborn.
@@ -30,9 +39,9 @@ export async function listBranch(repositoryPath: string, type: 'current' | 'loca
         }
         // New branches have a `heads/` prefix.
         const name = result.stdout.trim().replace(/^heads\//, '');
-        return (await getBranches(repositoryPath, `refs/heads/${name}`)).shift();
+        return (await getBranches(repositoryPath, [`refs/heads/${name}`], options)).shift();
     } else {
-        const result = await getBranches(repositoryPath);
+        const result = await getBranches(repositoryPath, [], options);
         switch (type) {
             case 'local': return result.filter(branch => branch.type === BranchType.Local);
             case 'remote': return result.filter(branch => branch.type === BranchType.Remote);
@@ -51,34 +60,34 @@ export async function createBranch(repositoryPath: string, name: string, options
     await git(args, repositoryPath, 'createBranch');
 }
 
-export async function renameBranch(repositoryPath: string, name: string, newName: string, options?: { force?: boolean }): Promise<void> {
-    const force = options ? options.force : false;
+export async function renameBranch(repositoryPath: string, name: string, newName: string, renameOptions?: { force?: boolean }, options?: IGitExecutionOptions): Promise<void> {
+    const force = renameOptions ? renameOptions.force : false;
     const args = ['branch', `${force ? '-M' : '-m'}`, name, newName];
-    await git(args, repositoryPath, 'renameBranch');
+    await git(args, repositoryPath, 'renameBranch', options);
 }
 
-export async function deleteBranch(repositoryPath: string, name: string, options?: { force?: boolean, remote?: boolean }): Promise<void> {
-    const force = options ? options.force : false;
-    const remote = options ? options.remote : false;
+export async function deleteBranch(repositoryPath: string, name: string, deleteOptions?: { force?: boolean, remote?: boolean }, options?: IGitExecutionOptions): Promise<void> {
+    const force = deleteOptions ? deleteOptions.force : false;
+    const remote = deleteOptions ? deleteOptions.remote : false;
     const args = ['branch', `${force ? '-D' : '-d'}`, `${name}`];
-    const branches = remote ? await getBranches(repositoryPath) : [];
-    await git(args, repositoryPath, 'deleteBranch');
+    const branches = remote ? await getBranches(repositoryPath, [], options) : [];
+    await git(args, repositoryPath, 'deleteBranch', options);
     if (remote && branches && branches.length) {
         const branch = branches.find(branch => branch.name.replace(/^heads\//, '') === name);
         if (branch && branch.remote) {
             // Push the remote deletion.
-            await git(['push', branch.remote, `:${branch.upstreamWithoutRemote}`], repositoryPath, 'deleteRemoteBranch');
+            await git(['push', branch.remote, `:${branch.upstreamWithoutRemote}`], repositoryPath, 'deleteRemoteBranch', options);
         }
     }
 }
 
-async function getBranches(repositoryPath: string, ...prefixes: string[]): Promise<Branch[]> {
+async function getBranches(repositoryPath: string, prefixes: string[], options?: IGitExecutionOptions): Promise<Branch[]> {
     if (!prefixes || !prefixes.length) {
         prefixes = ['refs/heads', 'refs/remotes'];
     }
     // Branches are ordered by their commit date, in inverse chronological order. The first item is the most recent.
     const args = ['for-each-ref', `--format=${forEachRefFormat}`, '--sort=-committerdate', ...prefixes];
-    const result = await git(args, repositoryPath, 'getBranches');
+    const result = await git(args, repositoryPath, 'getBranches', options);
     const names = result.stdout;
     const lines = names.split(delimiterString);
 

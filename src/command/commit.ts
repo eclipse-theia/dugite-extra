@@ -1,6 +1,6 @@
-import { git, GitError } from '../core/git'
+import { git, GitError, IGitExecutionOptions } from '../core/git'
 
-export async function createCommit(repositoryPath: string, message: string, signOff: boolean = false, amend: boolean = false): Promise<void> {
+export async function createCommit(repositoryPath: string, message: string, signOff: boolean = false, amend: boolean = false, options?: IGitExecutionOptions): Promise<void> {
     try {
         const args = ['commit', '-F', '-'];
         if (signOff) {
@@ -9,7 +9,17 @@ export async function createCommit(repositoryPath: string, message: string, sign
         if (amend) {
             args.push('--amend');
         }
-        await git(args, repositoryPath, 'createCommit', { stdin: message });
+        let opts = {};
+        if (options) {
+            opts = {
+                ...options
+            }
+        }
+        opts = {
+            ...opts,
+            stdin: message
+        }
+        await git(args, repositoryPath, 'createCommit', opts);
     } catch (e) {
         // Commit failures could come from a pre-commit hook rejection. So display
         // a bit more context than we otherwise would.

@@ -15,10 +15,16 @@ import { IFetchProgress } from '../progress';
  *                           the '--progress' command line flag for
  *                           'git fetch'.
  */
-export async function fetch(repositoryPath: string, remote: string, progressCallback?: (progress: IFetchProgress) => void): Promise<void> {
+export async function fetch(repositoryPath: string, remote: string, exec: IGitExecutionOptions.ExecFunc, progressCallback?: (progress: IFetchProgress) => void): Promise<void> {
     let opts: IGitExecutionOptions = {
         successExitCodes: new Set([0]),
     };
+    if (exec) {
+        opts = {
+            ...opts,
+            exec
+        };
+    }
 
     if (progressCallback) {
         const title = `Fetching ${remote}`;
@@ -57,10 +63,16 @@ export async function fetch(repositoryPath: string, remote: string, progressCall
 }
 
 /** Fetch a given refspec from the given remote. */
-export async function fetchRefspec(repositoryPath: string, remote: string, refspec: string): Promise<void> {
-    const options = {
+export async function fetchRefspec(repositoryPath: string, remote: string, refspec: string, exec?: IGitExecutionOptions.ExecFunc): Promise<void> {
+    let options: IGitExecutionOptions = {
         successExitCodes: new Set([0, 128])
     };
+    if (exec) {
+        options = {
+            ...options,
+            exec
+        };
+    }
     const args = ['fetch', remote, refspec];
     await git(args, repositoryPath, 'fetchRefspec', options);
 }
