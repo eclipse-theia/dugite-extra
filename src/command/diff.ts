@@ -17,9 +17,9 @@ const imageFileExtensions = new Set(['.png', '.jpg', '.jpeg', '.gif']);
  * @param commitish A commit SHA or some other identifier that ultimately dereferences
  *                  to a commit.
  */
-export function getCommitDiff(repositoryPath: string, file: FileChange, commitish: string): Promise<IDiff> {
+export function getCommitDiff(repositoryPath: string, file: FileChange, commitish: string, options?: IGitExecutionOptions): Promise<IDiff> {
     const args = ['log', commitish, '-m', '-1', '--first-parent', '--patch-with-raw', '-z', '--no-color', '--', file.path];
-    return git(args, repositoryPath, 'getCommitDiff')
+    return git(args, repositoryPath, 'getCommitDiff', options)
         .then(value => diffFromRawDiffOutput(value.stdout))
         .then(diff => convertDiff(repositoryPath, file, diff, commitish));
 }
@@ -29,9 +29,9 @@ export function getCommitDiff(repositoryPath: string, file: FileChange, commitis
  * compared against HEAD if it's tracked, if not it'll be compared to an empty file meaning
  * that all content in the file will be treated as additions.
  */
-export function getWorkingDirectoryDiff(repositoryPath: string, file: WorkingDirectoryFileChange): Promise<IDiff> {
+export function getWorkingDirectoryDiff(repositoryPath: string, file: WorkingDirectoryFileChange, exec?: IGitExecutionOptions.ExecFunc): Promise<IDiff> {
 
-    let opts: IGitExecutionOptions | undefined;
+    let opts: IGitExecutionOptions | undefined = {};
     let args: string[];
 
     // `--no-ext-diff` should be provided wherever we invoke `git diff` so that any
@@ -61,6 +61,13 @@ export function getWorkingDirectoryDiff(repositoryPath: string, file: WorkingDir
         args = ['diff', '--no-ext-diff', '--patch-with-raw', '-z', '--no-color', '--', file.path];
     } else {
         args = ['diff', 'HEAD', '--no-ext-diff', '--patch-with-raw', '-z', '--no-color', '--', file.path];
+    }
+
+    if (exec) {
+        opts = {
+            ...opts,
+            exec
+        }
     }
 
     return git(args, repositoryPath, 'getWorkingDirectoryDiff', opts)

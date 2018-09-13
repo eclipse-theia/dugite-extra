@@ -18,8 +18,21 @@ import { IPullProgress } from '../progress';
  *                           the '--progress' command line flag for
  *                           'git pull'.
  */
-export async function pull(repositoryPath: string, remote: string, branch?: string, progressCallback?: (progress: IPullProgress) => void): Promise<void> {
+export async function pull(
+    repositoryPath: string,
+    remote: string,
+    branch?: string,
+    exec?: IGitExecutionOptions.ExecFunc,
+    progressCallback?: (progress: IPullProgress) => void): Promise<void> {
+
     let opts: IGitExecutionOptions = {};
+    if (exec) {
+        opts = {
+            ...opts,
+            exec
+        };
+    }
+
     if (progressCallback) {
         const title = `Pulling ${remote}`;
         const kind = 'pull';

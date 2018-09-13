@@ -1,6 +1,6 @@
 import { relative } from 'path';
 import { ChildProcess } from 'child_process';
-import { git } from '../core/git';
+import { git, IGitExecutionOptions } from '../core/git';
 
 const upath = require('upath');
 const normalizeSafe: (path: string) => string = upath.normalizeSafe;
@@ -21,9 +21,10 @@ const binaryEncoding: (process: ChildProcess) => void = cb => cb.stdout.setEncod
  * @param commitish  - A commit SHA or some other identifier that ultimately dereferences to a commit/tree. `HEAD` is the `HEAD`. If empty string, shows the index state.
  * @param path       - The absolute FS path which is contained in the repository.
  */
-export async function getTextContents(repositoryPath: string, commitish: string, path: string): Promise<Buffer> {
+export async function getTextContents(repositoryPath: string, commitish: string, path: string, options: IGitExecutionOptions = {}): Promise<Buffer> {
     const args = ['show', `${commitish}:${normalizeSafe(relative(repositoryPath, path))}`];
     const opts = {
+        ...options,
         successExitCodes,
         processCallback: utf8Encoding,
     };
@@ -43,9 +44,10 @@ export async function getTextContents(repositoryPath: string, commitish: string,
  * @param commitish  - A commit SHA or some other identifier that ultimately dereferences to a commit/tree. `HEAD` is the `HEAD`. If empty string, shows the index state.
  * @param path       - The absolute FS path which is contained in the repository.
  */
-export async function getBlobContents(repositoryPath: string, commitish: string, path: string): Promise<Buffer> {
+export async function getBlobContents(repositoryPath: string, commitish: string, path: string, options: IGitExecutionOptions = {}): Promise<Buffer> {
     const args = ['show', `${commitish}:${path}`];
     const opts = {
+        ...options,
         successExitCodes,
         processCallback: binaryEncoding,
     };

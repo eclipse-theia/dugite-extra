@@ -1,4 +1,4 @@
-import { git } from '../core/git';
+import { git, IGitExecutionOptions } from '../core/git';
 
 /** The reset modes which are supported. */
 export const enum GitResetMode {
@@ -36,9 +36,9 @@ function resetModeToFlag(mode: GitResetMode): string {
 }
 
 /** Reset with the mode to the ref. */
-export async function reset(repositoryPath: string, mode: GitResetMode, ref: string): Promise<void> {
+export async function reset(repositoryPath: string, mode: GitResetMode, ref: string, options?: IGitExecutionOptions): Promise<void> {
     const modeFlag = resetModeToFlag(mode);
-    await git(['reset', modeFlag, ref, '--'], repositoryPath, 'reset');
+    await git(['reset', modeFlag, ref, '--'], repositoryPath, 'reset', options);
 }
 
 /**
@@ -56,16 +56,16 @@ export async function reset(repositoryPath: string, mode: GitResetMode, ref: str
  * @param paths     The paths that should be updated in the index with information
  *                  from the given tree
  */
-export async function resetPaths(repositoryPath: string, mode: GitResetMode, ref: string, paths: string[]): Promise<void> {
+export async function resetPaths(repositoryPath: string, mode: GitResetMode, ref: string, paths: string[], options?: IGitExecutionOptions): Promise<void> {
     if (!paths.length) {
         return;
     }
 
     const modeFlag = resetModeToFlag(mode);
-    await git(['reset', modeFlag, ref, '--', ...paths], repositoryPath, 'reset');
+    await git(['reset', modeFlag, ref, '--', ...paths], repositoryPath, 'reset', options);
 }
 
 /** Unstage all paths. */
-export async function unstageAll(repositoryPath: string): Promise<void> {
-    await git(['reset', '--', '.'], repositoryPath, 'unstageAll');
+export async function unstageAll(repositoryPath: string, options?: IGitExecutionOptions): Promise<void> {
+    await git(['reset', '--', '.'], repositoryPath, 'unstageAll', options);
 }

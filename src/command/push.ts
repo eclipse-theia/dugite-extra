@@ -24,7 +24,7 @@ import { IPushProgress, PushProgressParser, executionOptionsWithProgress } from 
  *                           'git push'.
  */
 export async function push(repositoryPath: string, remote: string, localBranch: string, remoteBranch?: string,
-    progressCallback?: (progress: IPushProgress) => void): Promise<void> {
+    exec?: IGitExecutionOptions.ExecFunc, progressCallback?: (progress: IPushProgress) => void): Promise<void> {
 
     const args = [
         'push',
@@ -33,6 +33,12 @@ export async function push(repositoryPath: string, remote: string, localBranch: 
     ];
 
     let opts: IGitExecutionOptions = {};
+    if (exec) {
+        opts = {
+            ...opts,
+            exec
+        };
+    }
 
     if (progressCallback) {
         args.push('--progress');

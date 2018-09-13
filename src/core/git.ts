@@ -1,6 +1,15 @@
 import * as fs from 'fs';
+import * as Path from 'path';
 import findGit from 'find-git-exec';
-import { GitProcess, IGitResult as DugiteResult, GitError as DugiteError, IGitExecutionOptions as DugiteExecutionOptions } from 'dugite';
+import {
+    GitProcess,
+    IGitResult as DugiteResult,
+    GitError as DugiteError,
+    IGitExecutionOptions as DugiteExecutionOptions,
+    RepositoryDoesNotExistErrorCode,
+    GitNotFoundErrorCode
+} from 'dugite';
+import findGitExec from 'find-git-exec';
 
 // tslint:disable:max-line-length
 const __GIT_PATH__: { gitDir: string | undefined, gitExecPath: string | undefined, searched: boolean } = { gitDir: undefined, gitExecPath: undefined, searched: false };
@@ -23,6 +32,19 @@ export interface IGitExecutionOptions extends DugiteExecutionOptions {
      * be logged and an error thrown.
      */
     readonly expectedErrors?: ReadonlySet<DugiteError>
+
+    /**
+     * `path` is equivalent to `cwd`.
+     * If the `exec` function is set:
+     *   - then this will be called instead of the `child_process.execFile`. Clients will **not** have access to the `stdin`.
+     *   - then the `USE_LOCAL_GIT` must be set to `"true"`. Otherwise, an error will be thrown.
+     *   - the all other properties defined by this option will be ignored except the `env` property.
+     */
+    readonly exec?: IGitExecutionOptions.ExecFunc;
+}
+
+export namespace IGitExecutionOptions {
+    export type ExecFunc = (args: string[], options: { cwd: string, stdin?: string }, callback: (error: Error | null, stdout: string, stderr: string) => void) => void;
 }
 
 /**
@@ -72,6 +94,97 @@ export class GitError extends Error {
     }
 }
 
+function pathExists(path?: string): Boolean {
+    if (path === undefined) {
+        return false;
+    }
+    try {
+        fs.accessSync(path, (fs as any).F_OK)
+        return true
+    } catch {
+        return false
+    }
+}
+
+/**
+ * `path` is the `pwd` where the Git command gets executed.
+ */
+function gitExternal(args: string[], path: string, options: IGitExecutionOptions): Promise<DugiteResult> {
+    if (options.exec === undefined) {
+        throw new Error(`options.exec must be defined.`);
+    }
+    // XXX: this is just to keep the original code from here https://github.com/desktop/dugite/blob/master/lib/git-process.ts#L172-L227
+    const maxBuffer = options.maxBuffer ? options.maxBuffer : 10 * 1024 * 1024;
+    const { exec } = options;
+    return new Promise<DugiteResult>((resolve, reject) => {
+        let stdin: string | undefined = undefined;
+        if (options.stdin !== undefined) {
+            if (typeof options.stdin === 'string') {
+                stdin = options.stdin;
+            } else {
+                stdin = options.stdin.toString('utf8');
+            }
+        }
+        exec(args, { cwd: path, stdin }, (err: Error | null, stdout: string, stderr: string) => {
+            if (!err) {
+                resolve({ stdout, stderr, exitCode: 0 })
+                return
+            }
+
+            const errWithCode = err as (Error & { code: number | string | undefined })
+
+            let code = errWithCode.code
+
+            // If the error's code is a string then it means the code isn't the
+            // process's exit code but rather an error coming from Node's bowels,
+            // e.g., ENOENT.
+            if (typeof code === 'string') {
+                if (code === 'ENOENT') {
+                    let message = err.message
+                    if (pathExists(process.env.LOCAL_GIT_DIRECTORY) === false) {
+                        message = 'Unable to find path to repository on disk.'
+                        code = RepositoryDoesNotExistErrorCode
+                    } else {
+                        message = `Git could not be found at the expected path: '${
+                            process.env.LOCAL_GIT_DIRECTORY
+                            }'. This might be a problem with how the application is packaged, so confirm this folder hasn't been removed when packaging.`
+                        code = GitNotFoundErrorCode
+                    }
+
+                    const error = new Error(message) as (Error & { code: number | string | undefined })
+                    error.name = err.name
+                    error.code = code
+                    reject(error)
+                } else {
+                    reject(err)
+                }
+
+                return
+            }
+
+            if (typeof code === 'number') {
+                resolve({ stdout, stderr, exitCode: code })
+                return
+            }
+
+            // Git has returned an output that couldn't fit in the specified buffer
+            // as we don't know how many bytes it requires, rethrow the error with
+            // details about what it was previously set to...
+            if (err.message === 'stdout maxBuffer exceeded') {
+                reject(
+                    new Error(
+                        `The output from the command could not fit into the allocated stdout buffer. Set options.maxBuffer to a larger value than ${
+                        maxBuffer
+                        } bytes`
+                    )
+                )
+            } else {
+                reject(err)
+            }
+        });
+    });
+}
+
 /**
  * Shell out to git with the given arguments, at the given path.
  *
@@ -93,68 +206,112 @@ export class GitError extends Error {
  */
 export async function git(args: string[], path: string, name: string, options?: IGitExecutionOptions): Promise<IGitResult> {
 
-    let defaultOptions: IGitExecutionOptions = {
-        successExitCodes: new Set([0]),
-        expectedErrors: new Set(),
+    // This is only for testing everything Git related over SSH with a naive way.
+    // Do not ever use this in production. The SSH dependency is not available in production mode.
+    let ssh: any;
+    if (process.env.GIT_OVER_SSH_TEST === 'true') {
+        ssh = await setupSsh();
     }
 
-    await initGitEnv();
-    await configureGitEnv();
+    try {
+        if (
+            options
+            && options.exec
+            && (typeof process.env.LOCAL_GIT_PATH === 'undefined')) {
+            throw new Error('LOCAL_GIT_PATH must be specified when using an exec function.');
+        }
 
-    const opts = { ...defaultOptions, ...options }
-    const result = await GitProcess.exec(args, path, options);
-    const exitCode = result.exitCode
+        const defaultOptions: IGitExecutionOptions = {
+            successExitCodes: new Set([0]),
+            expectedErrors: new Set(),
+        }
 
-    let gitError: DugiteError | undefined = undefined
-    const acceptableExitCode = opts.successExitCodes ? opts.successExitCodes.has(exitCode) : false
-    if (!acceptableExitCode) {
-        gitError = GitProcess.parseError(result.stderr) || undefined
-        if (!gitError) {
-            gitError = GitProcess.parseError(result.stdout) || undefined
+        const opts = { ...defaultOptions, ...options }
+        let result: DugiteResult;
+        if (options && options.exec) {
+            result = await gitExternal(args, path, options);
+        } else {
+            await initGitEnv();
+            await configureGitEnv();
+            result = await GitProcess.exec(args, path, options);
+        }
+
+        const exitCode = result.exitCode
+
+        let gitError: DugiteError | undefined = undefined
+        const acceptableExitCode = opts.successExitCodes ? opts.successExitCodes.has(exitCode) : false
+        if (!acceptableExitCode) {
+            gitError = GitProcess.parseError(result.stderr) || undefined
+            if (!gitError) {
+                gitError = GitProcess.parseError(result.stdout) || undefined
+            }
+        }
+
+        const gitErrorDescription = gitError ? getDescriptionForError(gitError) : undefined
+        const gitResult = { ...result, gitError, gitErrorDescription }
+
+        let acceptableError = true
+        if (gitError && opts.expectedErrors) {
+            acceptableError = opts.expectedErrors.has(gitError)
+        }
+
+        if ((gitError && acceptableError) || acceptableExitCode) {
+            return gitResult
+        }
+
+        console.error(`The command \`git ${args.join(' ')}\` exited with an unexpected code: ${exitCode}. The caller should either handle this error, or expect that exit code.`)
+        if (result.stdout.length) {
+            console.error(result.stdout)
+        }
+
+        if (result.stderr.length) {
+            console.error(result.stderr)
+        }
+
+        if (gitError) {
+            console.error(`(The error was parsed as ${gitError}: ${gitErrorDescription})`)
+        }
+
+        throw new GitError(gitResult, args)
+    } finally {
+        if (ssh && 'dispose' in ssh && typeof ssh.dispose === 'function') {
+            ssh.dispose();
         }
     }
-
-    const gitErrorDescription = gitError ? getDescriptionForError(gitError) : undefined
-    const gitResult = { ...result, gitError, gitErrorDescription }
-
-    let acceptableError = true
-    if (gitError && opts.expectedErrors) {
-        acceptableError = opts.expectedErrors.has(gitError)
-    }
-
-    if ((gitError && acceptableError) || acceptableExitCode) {
-        return gitResult
-    }
-
-    console.error(`The command \`git ${args.join(' ')}\` exited with an unexpected code: ${exitCode}. The caller should either handle this error, or expect that exit code.`)
-    if (result.stdout.length) {
-        console.error(result.stdout)
-    }
-
-    if (result.stderr.length) {
-        console.error(result.stderr)
-    }
-
-    if (gitError) {
-        console.error(`(The error was parsed as ${gitError}: ${gitErrorDescription})`)
-    }
-
-    throw new GitError(gitResult, args)
 }
 
-async function splitPath(path: string): Promise<string[]> {
-    const parts = path.split(/(\/|\\)/);
-    if (!parts.length) {
-        return parts;
+async function setupSsh(options?: IGitExecutionOptions): Promise<any> {
+    let ssh: any;
+    if (options === undefined) {
+        options = {};
     }
-    // When the `path` starts with a slash, the the first part is empty string.
-    return !parts[0].length ? parts.slice(1) : parts;
+    const gitPath = await findGitExec();
+    if (typeof process.env.LOCAL_GIT_PATH === 'undefined') {
+        process.env.LOCAL_GIT_PATH = gitPath.path;
+    }
+    const SSH = require('node-ssh');
+    ssh = await new SSH().connect({
+        host: process.env.GIT_OVER_SSH_TEST_HOST || 'localhost',
+        username: process.env.GIT_OVER_SSH_TEST_USERNAME || 'username',
+        password: process.env.GIT_OVER_SSH_TEST_PASSWORD || 'password',
+    });
+    const exec: IGitExecutionOptions.ExecFunc = async (args: string[], options: { cwd: string, stdin?: string }, callback: (error: Error | null, stdout: string, stderr: string) => void) => {
+        const { stdout, stderr, code } = await ssh.execCommand(`${gitPath.path} ${args.join(' ')}`, { cwd: options.cwd, stdin: options.stdin });
+        let error: Error | null = null
+        if (code) {
+            error = new Error(stderr || 'Unknown error.');
+            (error as any).code = code
+        }
+        callback(error, stdout, stderr)
+    }
+    (options as any).exec = exec;
+    return ssh;
 }
 
-export async function gitVersion(): Promise<string> {
+export async function gitVersion(options?: IGitExecutionOptions): Promise<string> {
     await initGitEnv();
     await configureGitEnv();
-    const { stdout } = await GitProcess.exec(['--version'], '') || '';
+    const { stdout } = await GitProcess.exec(['--version'], '', options) || '';
     return stdout.trim();
 }
 
@@ -165,9 +322,9 @@ async function initGitEnv() {
             const git = await findGit();
             if (git && git.path && git.execPath) {
                 // We need to traverse up two levels to get the expected Git directory.
+                // `dugite` expects the directory path instead of the executable path.
                 // https://github.com/desktop/dugite/issues/111
-                const segments = await splitPath(git.path);
-                const gitDir = segments.slice(0, segments.length - 4).join('');
+                const gitDir = Path.dirname(Path.dirname(git.path));
                 if (fs.existsSync(gitDir) && fs.existsSync(git.execPath)) {
                     __GIT_PATH__.gitDir = gitDir;
                     __GIT_PATH__.gitExecPath = git.execPath;

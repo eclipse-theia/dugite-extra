@@ -24,6 +24,53 @@
             "smartStep": true,
             "internalConsoleOptions": "openOnSessionStart",
             "outputCapture": "std"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "protocol": "inspector",
+            "name": "Run Mocha Test [External Git]",
+            "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "${file}",
+                "--no-timeouts",
+                "--colors",
+                "--opts",
+                "${workspaceRoot}/mocha.opts"
+            ],
+            "env": {
+                "TS_NODE_PROJECT": "${workspaceRoot}/tsconfig.json",
+                "USE_LOCAL_GIT": "true"
+            },
+            "sourceMaps": true,
+            "smartStep": true,
+            "internalConsoleOptions": "openOnSessionStart",
+            "outputCapture": "std"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "protocol": "inspector",
+            "name": "Run Mocha Test [SSH]",
+            "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "${file}",
+                "--no-timeouts",
+                "--colors",
+                "--opts",
+                "${workspaceRoot}/mocha.opts"
+            ],
+            "env": {
+                "TS_NODE_PROJECT": "${workspaceRoot}/tsconfig.json",
+                "GIT_OVER_SSH_TEST": "true",
+                "GIT_OVER_SSH_TEST_HOST": "localhost",
+                "GIT_OVER_SSH_TEST_USERNAME": "username",
+                "GIT_OVER_SSH_TEST_PASSWORD": "password"
+            },
+            "sourceMaps": true,
+            "smartStep": true,
+            "internalConsoleOptions": "openOnSessionStart",
+            "outputCapture": "std"
         }
     ]
 }

@@ -1,5 +1,5 @@
 import * as Path from 'path';
-import { git } from '../core/git'
+import { git, IGitExecutionOptions } from '../core/git'
 import { ChildProcess } from 'child_process'
 import { ICheckoutProgress, CheckoutProgressParser, progressProcessCallback } from '../progress'
 
@@ -20,7 +20,7 @@ export type ProgressCallback = (progress: ICheckoutProgress) => void
  *                           enables the '--progress' command line flag for
  *                           'git checkout'.
  */
-export async function checkoutBranch(repositoryPath: string, name: string, progressCallback?: ProgressCallback): Promise<void> {
+export async function checkoutBranch(repositoryPath: string, name: string, options?: IGitExecutionOptions, progressCallback?: ProgressCallback): Promise<void> {
     let processCallback: ProcessCallback | undefined = undefined
     if (progressCallback) {
         const title = `Checking out branch ${name}`
@@ -47,12 +47,16 @@ export async function checkoutBranch(repositoryPath: string, name: string, progr
         ? ['checkout', '--progress', name, '--']
         : ['checkout', name, '--']
 
-    await git(args, repositoryPath, 'checkoutBranch', { processCallback });
+    const opts = {
+        ...options,
+        processCallback
+    }
+    await git(args, repositoryPath, 'checkoutBranch', opts);
 }
 
 /** Check out the paths at HEAD. */
-export async function checkoutPaths(repositoryPath: string, paths: string[]): Promise<void> {
-    await checkout(repositoryPath, paths, 'HEAD');
+export async function checkoutPaths(repositoryPath: string, paths: string[], options?: IGitExecutionOptions): Promise<void> {
+    await checkout(repositoryPath, paths, 'HEAD', false, false, options);
 }
 
 /**
@@ -64,7 +68,7 @@ export async function checkoutPaths(repositoryPath: string, paths: string[]): Pr
  * @param merge when checking out paths from the index, this option lets you recreate the conflicted merge in the specified paths.
  * @param force when checking out paths from the index, do not fail upon unmerged entries; instead, unmerged entries are ignored.
  */
-export async function checkout(repositoryPath: string, paths: string[], commitSHA?: string, merge?: boolean, force?: boolean): Promise<void> {
+export async function checkout(repositoryPath: string, paths: string[], commitSHA: string, merge?: boolean, force?: boolean, options?: IGitExecutionOptions): Promise<void> {
     const args = ['checkout'];
     if (commitSHA) {
         args.push(commitSHA);
@@ -77,5 +81,5 @@ export async function checkout(repositoryPath: string, paths: string[], commitSH
     }
     args.push('--');
     args.push(...paths.map(p => Path.relative(repositoryPath, p)));
-    await git(args, repositoryPath, 'checkoutPaths');
+    await git(args, repositoryPath, 'checkoutPaths', options);
 }

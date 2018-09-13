@@ -1,10 +1,10 @@
-import { git } from '../core/git'
+import { git, IGitExecutionOptions } from '../core/git'
 import { AppFileStatus, WorkingDirectoryFileChange } from '../model/status'
 import { DiffType } from '../model/diff'
 import { getWorkingDirectoryDiff } from './diff'
 import { formatPatch } from '../parser/patch-formatter'
 
-export async function applyPatchToIndex(repositoryPath: string, file: WorkingDirectoryFileChange): Promise<void> {
+export async function applyPatchToIndex(repositoryPath: string, file: WorkingDirectoryFileChange, options?: IGitExecutionOptions): Promise<void> {
 
     // If the file was a rename we have to recreate that rename since we've
     // just blown away the index. Think of this block of weird looking commands
@@ -27,7 +27,7 @@ export async function applyPatchToIndex(repositoryPath: string, file: WorkingDir
         const [mode, , oid] = info.split(' ', 3);
 
         // Add the old file blob to the index under the new name
-        await git(['update-index', '--add', '--cacheinfo', mode, oid, file.path], repositoryPath, 'applyPatchToIndex');
+        await git(['update-index', '--add', '--cacheinfo', mode, oid, file.path], repositoryPath, 'applyPatchToIndex', options);
     }
 
     const applyArgs: string[] = ['apply', '--cached', '--unidiff-zero', '--whitespace=nowarn', '-'];
@@ -37,8 +37,17 @@ export async function applyPatchToIndex(repositoryPath: string, file: WorkingDir
     if (diff.kind !== DiffType.Text) {
         throw new Error(`Unexpected diff result returned: '${diff.kind}'`);
     }
-
+    let opts = {};
+    if (options) {
+        opts = {
+            ...options
+        };
+    }
     const patch = await formatPatch(file, diff);
-    await git(applyArgs, repositoryPath, 'applyPatchToIndex', { stdin: patch });
+    opts = {
+        ...opts,
+        stdin: patch
+    }
+    await git(applyArgs, repositoryPath, 'applyPatchToIndex', options);
 
 }
