@@ -1,6 +1,6 @@
 {
     "name": "dugite-extra",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "High-level Git commands for dugite.",
     "main": "lib/index",
     "typings": "lib/index",
