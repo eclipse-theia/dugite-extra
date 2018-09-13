@@ -51,13 +51,13 @@ export async function listBranch(repositoryPath: string, type: 'current' | 'loca
     }
 }
 
-export async function createBranch(repositoryPath: string, name: string, options?: { startPoint?: string }): Promise<void> {
-    const startPoint = options ? options.startPoint : undefined;
+export async function createBranch(repositoryPath: string, name: string, createOptions?: { startPoint?: string }, options?: IGitExecutionOptions): Promise<void> {
+    const startPoint = createOptions ? createOptions.startPoint : undefined;
     const args = ['branch', name];
     if (startPoint) {
         args.push(startPoint);
     }
-    await git(args, repositoryPath, 'createBranch');
+    await git(args, repositoryPath, 'createBranch', options);
 }
 
 export async function renameBranch(repositoryPath: string, name: string, newName: string, renameOptions?: { force?: boolean }, options?: IGitExecutionOptions): Promise<void> {

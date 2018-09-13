@@ -15,7 +15,7 @@ import { IFetchProgress } from '../progress';
  *                           the '--progress' command line flag for
  *                           'git fetch'.
  */
-export async function fetch(repositoryPath: string, remote: string, exec: IGitExecutionOptions.ExecFunc, progressCallback?: (progress: IFetchProgress) => void): Promise<void> {
+export async function fetch(repositoryPath: string, remote: string, exec?: IGitExecutionOptions.ExecFunc, progressCallback?: (progress: IFetchProgress) => void): Promise<void> {
     let opts: IGitExecutionOptions = {
         successExitCodes: new Set([0]),
     };
