@@ -8,7 +8,7 @@
     "tslint.configFile": "./tslint.json",
     "editor.formatOnSave": true,
     "files.exclude": {
-        "**/lib": true
+        "**/lib": false
     },
     // The number of spaces a tab is equal to. This setting is overriden
     // based on the file contents when `editor.detectIndentation` is `true`.
