@@ -1,6 +1,6 @@
 {
     "name": "dugite-extra",
-    "version": "0.1.5",
+    "version": "0.1.6",
     "description": "High-level Git commands for dugite.",
     "main": "lib/index",
     "typings": "lib/index",
@@ -33,7 +33,7 @@
     "license": "MIT",
     "dependencies": {
         "byline": "^5.0.0",
-        "dugite": "1.74.0",
+        "dugite": "1.67.0",
         "find-git-exec": "0.0.1-alpha.2",
         "upath": "^1.0.0"
     },
