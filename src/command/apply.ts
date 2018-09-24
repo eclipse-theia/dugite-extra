@@ -48,6 +48,6 @@ export async function applyPatchToIndex(repositoryPath: string, file: WorkingDir
         ...opts,
         stdin: patch
     }
-    await git(applyArgs, repositoryPath, 'applyPatchToIndex', options);
+    await git(applyArgs, repositoryPath, 'applyPatchToIndex', opts);
 
 }

@@ -36,7 +36,7 @@ export async function unstage(
 
     const _treeish = treeish || 'HEAD';
     const _where = where || 'all';
-    const branch = await git(['branch'], repositoryPath, 'branch');
+    const branch = await git(['branch'], repositoryPath, 'branch', options);
     const args: string[] = [];
     // Detached HEAD.
     if (!branch.stdout.trim()) {
