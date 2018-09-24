@@ -309,10 +309,17 @@ async function setupSsh(options?: IGitExecutionOptions): Promise<any> {
 }
 
 export async function gitVersion(options?: IGitExecutionOptions): Promise<string> {
-    await initGitEnv();
-    await configureGitEnv();
-    const { stdout } = await GitProcess.exec(['--version'], '', options) || '';
-    return stdout.trim();
+    const args = ['--version'];
+    const path = '';
+    let result: DugiteResult;
+    if (options && options.exec) {
+        result = await gitExternal(args, path, options);
+    } else {
+        await initGitEnv();
+        await configureGitEnv();
+        result = await GitProcess.exec(args, path, options);
+    }
+    return (result.stdout || '').trim();
 }
 
 async function initGitEnv() {

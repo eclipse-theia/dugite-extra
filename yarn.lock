@@ -284,14 +284,14 @@ diff@^3.1.0, diff@^3.2.0:
   version "3.5.0"
   resolved "https://registry.yarnpkg.com/diff/-/diff-3.5.0.tgz#800c0dd1e0a8bfbc95835c202ad220fe317e5a12"
 
-dugite@1.74.0:
-  version "1.74.0"
-  resolved "https://registry.yarnpkg.com/dugite/-/dugite-1.74.0.tgz#20f6439242750d12966ab534aebd52d78911d241"
+dugite@1.67.0:
+  version "1.67.0"
+  resolved "https://registry.yarnpkg.com/dugite/-/dugite-1.67.0.tgz#389f95051aa1fb2bc78dcee4294f913ae3438c47"
   dependencies:
     checksum "^0.1.1"
     mkdirp "^0.5.1"
     progress "^2.0.0"
-    request "^2.88.0"
+    request "^2.86.0"
     rimraf "^2.5.4"
     tar "^4.0.2"
 
@@ -794,7 +794,7 @@ read-pkg@^3.0.0:
     normalize-package-data "^2.3.2"
     path-type "^3.0.0"
 
-request@^2.88.0:
+request@^2.86.0:
   version "2.88.0"
   resolved "https://registry.yarnpkg.com/request/-/request-2.88.0.tgz#9c2fca4f7d35b592efe57c7f0a55e81052124fef"
   dependencies:

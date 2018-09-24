@@ -23,7 +23,7 @@ export async function listBranch(repositoryPath: string, type: 'current' | 'loca
         let opts = {};
         if (options) {
             opts = {
-                ...opts
+                ...options
             };
         }
         opts = {
