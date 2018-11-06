@@ -29,9 +29,15 @@ export function getCommitDiff(repositoryPath: string, file: FileChange, commitis
  * compared against HEAD if it's tracked, if not it'll be compared to an empty file meaning
  * that all content in the file will be treated as additions.
  */
-export function getWorkingDirectoryDiff(repositoryPath: string, file: WorkingDirectoryFileChange, exec?: IGitExecutionOptions.ExecFunc): Promise<IDiff> {
+export function getWorkingDirectoryDiff(repositoryPath: string, file: WorkingDirectoryFileChange, options?: IGitExecutionOptions): Promise<IDiff> {
 
-    let opts: IGitExecutionOptions | undefined = {};
+    let opts: IGitExecutionOptions = {};
+    if (options) {
+        opts = {
+            ...opts,
+            ...options
+        }
+    }
     let args: string[];
 
     // `--no-ext-diff` should be provided wherever we invoke `git diff` so that any
@@ -48,7 +54,7 @@ export function getWorkingDirectoryDiff(repositoryPath: string, file: WorkingDir
         //
         // citation in source:
         // https://github.com/git/git/blob/1f66975deb8402131fbf7c14330d0c7cdebaeaa2/diff-no-index.c#L300
-        opts = { successExitCodes: new Set([0, 1]) };
+        opts = { ...opts, successExitCodes: new Set([0, 1]) };
         args = ['diff', '--no-ext-diff', '--no-index', '--patch-with-raw', '-z', '--no-color', '--', '/dev/null', file.path];
     } else if (file.status === AppFileStatus.Renamed) {
         // NB: Technically this is incorrect, the best kind of incorrect.
@@ -61,13 +67,6 @@ export function getWorkingDirectoryDiff(repositoryPath: string, file: WorkingDir
         args = ['diff', '--no-ext-diff', '--patch-with-raw', '-z', '--no-color', '--', file.path];
     } else {
         args = ['diff', 'HEAD', '--no-ext-diff', '--patch-with-raw', '-z', '--no-color', '--', file.path];
-    }
-
-    if (exec) {
-        opts = {
-            ...opts,
-            exec
-        }
     }
 
     return git(args, repositoryPath, 'getWorkingDirectoryDiff', opts)

@@ -22,14 +22,14 @@ export async function pull(
     repositoryPath: string,
     remote: string,
     branch?: string,
-    exec?: IGitExecutionOptions.ExecFunc,
+    options?: IGitExecutionOptions,
     progressCallback?: (progress: IPullProgress) => void): Promise<void> {
 
     let opts: IGitExecutionOptions = {};
-    if (exec) {
+    if (options) {
         opts = {
             ...opts,
-            exec
+            ...options
         };
     }
 
