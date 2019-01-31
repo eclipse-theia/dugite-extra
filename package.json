@@ -1,18 +1,15 @@
 {
     "name": "dugite-extra",
-    "version": "0.1.9",
+    "version": "0.1.10",
     "description": "High-level Git commands for dugite.",
     "main": "lib/index",
     "typings": "lib/index",
     "scripts": {
         "build": "tsc && tslint -c ./tslint.json --project ./tsconfig.json",
-        "test": "npm run test:embedded && npm run test:external",
-        "test:watch": "concurrently -n embedded,external \"npm run test:embedded:watch\" \"npm run test:external\" ",
-        "test:embedded": "mocha --opts ./mocha.opts src/**/*.spec.ts",
+        "test": "cross-env USE_LOCAL_GIT=true mocha --opts ./mocha.opts src/**/*.spec.ts",
+        "prepare": "npm run build && npm run test",
+        "test:watch": "cross-env USE_LOCAL_GIT=true mocha -w --opts ./mocha.opts src/**/*.spec.ts",
         "test:ssh": "cross-env GIT_OVER_SSH_TEST=true mocha --opts ./mocha.opts src/**/*.spec.ts",
-        "test:external": "cross-env USE_LOCAL_GIT=true mocha --opts ./mocha.opts src/**/*.spec.ts",
-        "test:embedded:watch": "mocha -w --opts ./mocha.opts src/**/*.spec.ts",
-        "test:external:watch": "cross-env USE_LOCAL_GIT=true mocha -w --opts ./mocha.opts src/**/*.spec.ts",
         "clean": "rimraf ./lib",
         "build:watch": "tsc -w",
         "clean:all": "rimraf ./lib && rimraf ./node_modules"
@@ -33,7 +30,7 @@
     "license": "MIT",
     "dependencies": {
         "byline": "^5.0.0",
-        "dugite": "1.67.0",
+        "dugite-no-gpl": "1.69.0",
         "find-git-exec": "0.0.1-alpha.2",
         "upath": "^1.0.0"
     },
@@ -47,7 +44,7 @@
         "concurrently": "^3.5.0",
         "cross-env": "^5.0.5",
         "fs-extra": "^4.0.1",
-        "mocha": "^3.4.2",
+        "mocha": "^5.2.0",
         "node-ssh": "^5.1.2",
         "rimraf": "^2.6.1",
         "temp": "^0.8.3",
