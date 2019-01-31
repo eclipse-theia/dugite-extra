@@ -8,7 +8,7 @@ import {
     IGitExecutionOptions as DugiteExecutionOptions,
     RepositoryDoesNotExistErrorCode,
     GitNotFoundErrorCode
-} from 'dugite';
+} from 'dugite-no-gpl';
 import findGitExec from 'find-git-exec';
 
 // tslint:disable:max-line-length
