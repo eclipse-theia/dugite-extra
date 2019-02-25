@@ -118,3 +118,8 @@ export function rename(repositoryPath: string, filesToRename: { oldPath: string,
     }
     return [...files.map(f => f.oldPath), ...files.map(f => f.newPath)];
 }
+
+export function contentIsEqual(repositoryPath: string, fileNameOrPath: string, content: string): boolean {
+    const fileContent = fs.readFileSync(path.join(repositoryPath, fileNameOrPath), { encoding: 'utf8' });
+    return fileContent === content;
+}
