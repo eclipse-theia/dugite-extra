@@ -51,6 +51,6 @@
         "ts-node": "^3.3.0",
         "tslint": "^5.7.0",
         "tslint-no-unused-expression-chai": "0.0.2",
-        "typescript": "^2.3.4"
+        "typescript": "~3.5.3"
     }
 }
