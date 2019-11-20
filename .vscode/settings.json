@@ -4,19 +4,22 @@
 // - Linux: $HOME/.config/Code/User/settings.json
 // - Mac: $HOME/Library/Application Support/Code/User/settings.json
 {
-    "tslint.enable": true,
-    "tslint.configFile": "./tslint.json",
-    "editor.formatOnSave": true,
-    "files.exclude": {
-        "**/lib": false
-    },
-    // The number of spaces a tab is equal to. This setting is overriden
-    // based on the file contents when `editor.detectIndentation` is `true`.
-    "editor.tabSize": 4,
-    // Insert spaces when pressing Tab. This setting is overriden
-    // based on the file contents when `editor.detectIndentation` is `true`.
-    "editor.insertSpaces": true,
-    // When opening a file, `editor.tabSize` and `editor.insertSpaces`
-    // will be detected based on the file contents.
-    "editor.detectIndentation": false
+  "tslint.enable": true,
+  "tslint.configFile": "./tslint.json",
+  "editor.formatOnSave": true,
+  "files.exclude": {
+    "**/lib": false
+  },
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
+  "[typescript]": {
+    "editor.tabSize": 4
+  },
+  "[json]": {
+    "editor.tabSize": 2
+  },
+  "[jsonc]": {
+    "editor.tabSize": 2
+  },
+  "files.insertFinalNewline": true
 }

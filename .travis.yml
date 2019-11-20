@@ -1,9 +1,17 @@
 language: node_js
 
+env:
+  # Fix Windows build never ending in Travis CI
+  # https://travis-ci.community/t/timeout-after-build-finished-and-succeeded/1336
+  - YARN_GPG=no
+
+os:
+  - linux
+  - osx
+  - windows
+
 node_js:
-- '6'
-- '7'
-- '8'
+- '10'
 
 git:
   depth: 1
@@ -13,7 +21,7 @@ branches:
   - master
 
 install:
-  npm i
+  yarn
 
 script:
-  npm run build && npm run test
+  yarn build && yarn test
