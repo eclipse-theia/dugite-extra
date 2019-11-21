@@ -43,7 +43,7 @@ export async function unstage(
         args.push(...['rm', '--cached', '-r', '--']);
     } else {
         if (_where === 'working-tree') {
-            args.push(...['checkout-index', '-f']);
+            args.push(...['checkout-index', '-f', '-u']);
         } else {
             args.push('reset');
             if (_where === 'index') {
