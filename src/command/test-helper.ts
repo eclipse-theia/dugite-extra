@@ -19,6 +19,11 @@ export async function initRepository(path: string, add?: boolean, commit?: boole
     if ((await git(['config', 'user.name', '"Jon Doe"'], path, 'config')).exitCode !== 0) {
         throw new Error(`Error while setting user name to the Git configuration.`);
     }
+    // To make sure we have `\n` as the line ending on both Windows and *NIX when asserting the tests.
+    // Otherwise, a `git checkout-index -u` will convert `\n` to `\r\n` on Windows.
+    if ((await git(['config', 'core.autocrlf', 'false'], path, 'config')).exitCode !== 0) {
+        throw new Error(`Error while adjusting core.autocrlf in the Git configuration.`);
+    }
     if (add) {
         if ((await git(['add', '.'], path, 'add')).exitCode !== 0) {
             throw new Error(`Error while staging changes into the repository.`);
