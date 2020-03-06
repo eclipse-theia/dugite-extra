@@ -6,6 +6,6 @@ High-level Git commands for [dugite-no-gpl](https://github.com/theia-ide/dugite)
 ## Requirements
 ```
   "engines": {
-    "node": ">=10.11.0 <12"
+    "node": ">=10.11.0 <12=.6.1"
   },
 ```
