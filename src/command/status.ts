@@ -1,7 +1,7 @@
 import { git, gitVersion, IGitExecutionOptions } from '../core/git';
 import { parsePorcelainStatus, mapStatus } from '../parser/status-parser';
 import { DiffSelectionType, DiffSelection } from '../model/diff';
-import { IStatusResult, IAheadBehind, WorkingDirectoryStatus, WorkingDirectoryFileChange, AppFileStatus, FileEntry, GitStatusEntry } from '../model/status';
+import { IStatusResult, IAheadBehind, WorkingDirectoryStatus, WorkingDirectoryFileChange, AppFileStatus, FileEntry } from '../model/status';
 
 function convertToAppStatus(status: FileEntry): AppFileStatus {
     if (status.kind === 'ordinary') {
@@ -104,18 +104,6 @@ export async function getStatus(
     for (const entry of entries) {
         if (entry.kind === 'entry') {
             const status = mapStatus(entry.statusCode);
-
-            if (status.kind === 'ordinary') {
-                // when a file is added in the index but then removed in the working
-                // directory, the file won't be part of the commit, so we can skip
-                // displaying this entry in the changes list
-                if (
-                    status.index === GitStatusEntry.Added &&
-                    status.workingTree === GitStatusEntry.Deleted
-                ) {
-                    continue;
-                }
-            }
 
             if (status.kind === 'untracked') {
                 // when a delete has been staged, but an untracked file exists with the
