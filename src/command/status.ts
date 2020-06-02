@@ -105,19 +105,6 @@ export async function getStatus(
         if (entry.kind === 'entry') {
             const status = mapStatus(entry.statusCode);
 
-            if (status.kind === 'untracked') {
-                // when a delete has been staged, but an untracked file exists with the
-                // same path, we should ensure that we only draw one entry in the
-                // changes list - see if an entry already exists for this path and
-                // remove it if found
-                if (existingFiles.has(entry.path)) {
-                    const existingEntry = files.findIndex(p => p.path === entry.path);
-                    if (existingEntry > -1) {
-                        files.splice(existingEntry, 1);
-                    }
-                }
-            }
-
             // for now we just poke at the existing summary
             const summary = convertToAppStatus(status);
             const selection = DiffSelection.fromInitialSelection(
