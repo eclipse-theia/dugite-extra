@@ -1,11 +1,11 @@
 {
   "name": "dugite-extra",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "High-level Git commands for dugite.",
   "main": "lib/index",
   "typings": "lib/index",
   "engines": {
-    "node": ">=10.11.0 <12"
+    "node": ">=10.11.0 <13"
   },
   "scripts": {
     "build": "tsc && tslint -c ./tslint.json --project ./tsconfig.json",
@@ -34,7 +34,7 @@
   "dependencies": {
     "byline": "^5.0.0",
     "dugite-no-gpl": "1.69.0",
-    "find-git-exec": "^0.0.2",
+    "find-git-exec": "^0.0.3",
     "upath": "^1.0.0"
   },
   "devDependencies": {
