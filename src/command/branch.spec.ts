@@ -6,16 +6,31 @@ import { createCommit } from './commit';
 import { initRepository } from './test-helper';
 import { git } from '../core/git';
 import { listBranch, createBranch } from './branch';
+import { IGitResult } from 'dugite-no-gpl';
 
 const track = temp.track();
 
 let path: string;
 
-const createAndCommit = async(filename: string, message: string): Promise<void> =>  {
+const createAndCommit = async (filename: string, message: string): Promise<void> => {
     fs.createFileSync(Path.join(path, filename));
 
     await git(['add', '.'], path, 'add');
     await createCommit(path, message);
+}
+const getCommitIds = async (repoPath: string): Promise<string[]> => {
+    let log: IGitResult;
+    try {
+        log = await git(['log', '--pretty=%H'], repoPath, 'log');
+        return log.stdout.trim().split('\n');
+    } catch (e) {
+        if (e.name === 'GitError' && e.result && e.result.exitCode && e.result.exitCode === 128) {
+            // git log on repo with no commits throws an error
+            return [];
+        } else {
+            throw e;
+        }
+    }
 }
 
 describe('branch', async () => {
@@ -86,6 +101,28 @@ describe('branch', async () => {
         const currentBranch = await listBranch(path, 'current');
         expect(currentBranch).to.not.be.undefined;
         expect(currentBranch!.name).to.be.equal(newBranch);
+    });
+
+    it('new branch is created on correct start point', async () => {
+        await createAndCommit('some-file.txt', 'first commit');
+
+        const commitIds = await getCommitIds(path);
+        const firstCommitId = commitIds[0];
+
+        await createAndCommit('other-text.txt', 'second commit');
+
+        const newBranch = 'branch1';
+        await createBranch(path, newBranch, {startPoint: firstCommitId});
+
+        const localBranches = await listBranch(path, 'all');
+        expect(localBranches.length).to.be.equal(2);
+
+        const currentBranch = await listBranch(path, 'current');
+        expect(currentBranch).to.not.be.undefined;
+        expect(currentBranch!.name).to.be.equal(newBranch);
+
+        const newCommitIds = await getCommitIds(path);
+        expect(newCommitIds[0]).to.be.equal(firstCommitId);
     });
 
 });
