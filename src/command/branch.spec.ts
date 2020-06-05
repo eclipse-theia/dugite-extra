@@ -25,8 +25,8 @@ describe('branch', async () => {
         await initRepository(path);
     });
 
-    afterEach(async () => {
-        await track.cleanup();
+    afterEach((done: ((err: any, result: temp.Stats) => void)) => {
+        track.cleanup(done);
     });
 
     it('no branch before first commit', async () => {
