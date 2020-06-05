@@ -64,7 +64,23 @@ describe('branch', async () => {
         expect(curretnBranch!.name).to.be.equal('master');
     });
 
-    it('new branch is selected on creation', async () => {
+    it('new branch is selected on creation if checkout is true', async () => {
+        await createAndCommit('some-file.txt', 'first commit');
+
+        const newBranch = 'branch1';
+        await createBranch(path, newBranch, { checkout: true });
+
+        const localBranches = await listBranch(path, 'all');
+        expect(localBranches.length).to.be.equal(2);
+        expect(localBranches[0].name).to.be.equal('master');
+        expect(localBranches[1].name).to.be.equal(newBranch);
+
+        const currentBranch = await listBranch(path, 'current');
+        expect(currentBranch).to.not.be.undefined;
+        expect(currentBranch!.name).to.be.equal(newBranch);
+    });
+
+    it('new branch is not selected on creation if checkout is false', async () => {
         await createAndCommit('some-file.txt', 'first commit');
 
         const newBranch = 'branch1';
@@ -77,20 +93,20 @@ describe('branch', async () => {
 
         const currentBranch = await listBranch(path, 'current');
         expect(currentBranch).to.not.be.undefined;
-        expect(currentBranch!.name).to.be.equal(newBranch);
+        expect(currentBranch!.name).to.be.equal('master');
     });
 
     it('new branch is not created until first commit', async () => {
         const newBranch = 'branch1';
-        await createBranch(path, newBranch);
+        await createBranch(path, newBranch, { checkout: true });
 
         const localBranches = await listBranch(path, 'all');
         expect(localBranches.length).to.be.equal(0);
     });
 
-    it('new branch is created on first commit in place of master', async () => {
+    it('new branch is created on first commit in place of master if checkout is true', async () => {
         const newBranch = 'branch1';
-        await createBranch(path, newBranch);
+        await createBranch(path, newBranch, { checkout: true });
 
         await createAndCommit('some-file.txt', 'first commit');
 
@@ -103,6 +119,20 @@ describe('branch', async () => {
         expect(currentBranch!.name).to.be.equal(newBranch);
     });
 
+    it('a new branch cannot be created before master if checkout is false', async () => {
+        const newBranch = 'branch1';
+        try {
+            await createBranch(path, newBranch);
+            expect.fail('An error should have been thrown by createBranch');
+        } catch (e) {
+            if (e.name === 'GitError' && e.result && e.result.exitCode && e.result.exitCode === 128) {
+                // git branch on repo with no commits should throw an error
+            } else {
+                expect.fail('createBranch failed with an unexpected error')
+            }
+        }
+    });
+
     it('new branch is created on correct start point', async () => {
         await createAndCommit('some-file.txt', 'first commit');
 
@@ -112,7 +142,7 @@ describe('branch', async () => {
         await createAndCommit('other-text.txt', 'second commit');
 
         const newBranch = 'branch1';
-        await createBranch(path, newBranch, {startPoint: firstCommitId});
+        await createBranch(path, newBranch, { startPoint: firstCommitId, checkout: true });
 
         const localBranches = await listBranch(path, 'all');
         expect(localBranches.length).to.be.equal(2);
