@@ -51,9 +51,15 @@ export async function listBranch(repositoryPath: string, type: 'current' | 'loca
     }
 }
 
-export async function createBranch(repositoryPath: string, name: string, createOptions?: { startPoint?: string }, options?: IGitExecutionOptions): Promise<void> {
+export async function createBranch(
+    repositoryPath: string,
+    name: string,
+    createOptions?: { startPoint?: string, checkout?: boolean },
+    options?: IGitExecutionOptions): Promise<void> {
+
     const startPoint = createOptions ? createOptions.startPoint : undefined;
-    const args = ['branch', name];
+    const checkout = createOptions ? createOptions.checkout : false;
+    const args = checkout ? ['checkout', '-b', name] : ['branch', name];
     if (startPoint) {
         args.push(startPoint);
     }
