@@ -76,5 +76,5 @@ export async function clone(
 
     args.push('--', url, path);
 
-    await git(args, __dirname, 'clone', opts);
+    await git(args, '', 'clone', opts);
 }
