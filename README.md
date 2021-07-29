@@ -14,8 +14,6 @@ Test files are located alongside the sourcefiles, e.g.: `command/branch.ts` and 
 
 
 ## Requirements
-```
-  "engines": {
-    "node": ">=10.11.0 <13"
-  },
-```
+- node: >= 10.11.0 < 13
+- git: >= 2.15.0
+
