@@ -11,8 +11,9 @@ os:
   - windows
 
 node_js:
-- '10'
 - '12'
+- '14'
+- '16'
 
 git:
   depth: 1
@@ -22,7 +23,7 @@ branches:
   - master
 
 install:
-  yarn
+  npm install
 
 script:
-  yarn build && yarn test
+  npm run build && npm test

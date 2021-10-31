@@ -13,9 +13,7 @@
       "args": [
         "${file}",
         "--no-timeouts",
-        "--colors",
-        "--opts",
-        "${workspaceRoot}/mocha.opts"
+        "--colors"
       ],
       "env": {
         "TS_NODE_PROJECT": "${workspaceRoot}/tsconfig.json"
@@ -35,8 +33,6 @@
         "${file}",
         "--no-timeouts",
         "--colors",
-        "--opts",
-        "${workspaceRoot}/mocha.opts"
       ],
       "env": {
         "TS_NODE_PROJECT": "${workspaceRoot}/tsconfig.json",
@@ -56,9 +52,7 @@
       "args": [
         "${file}",
         "--no-timeouts",
-        "--colors",
-        "--opts",
-        "${workspaceRoot}/mocha.opts"
+        "--colors"
       ],
       "env": {
         "TS_NODE_PROJECT": "${workspaceRoot}/tsconfig.json",
