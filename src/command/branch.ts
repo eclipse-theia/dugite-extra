@@ -100,7 +100,7 @@ async function getBranches(repositoryPath: string, prefixes: string[], options?:
     // Remove the trailing newline.
     lines.splice(-1, 1);
 
-    return lines.map((line, ix) => {
+    let branches = lines.map((line, ix) => {
         // Preceding newline character after first row.
         const pieces = (ix > 0 ? line.substr(1) : line).split('\0');
 
@@ -125,4 +125,6 @@ async function getBranches(repositoryPath: string, prefixes: string[], options?:
         const type = ref.startsWith('refs/head') ? BranchType.Local : BranchType.Remote;
         return new Branch(name, upstream.length > 0 ? upstream : undefined, tip, type);
     });
+    if (process.platform === 'darwin') { branches.reverse(); }
+    return branches;
 }

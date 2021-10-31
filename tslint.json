@@ -55,8 +55,5 @@
       "check-separator",
       "check-type"
     ]
-  },
-  "rulesDirectory": [
-    "node_modules/tslint-no-unused-expression-chai/rules"
-  ]
+  }
 }

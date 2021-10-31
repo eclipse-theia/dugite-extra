@@ -1,18 +1,18 @@
 {
   "name": "dugite-extra",
-  "version": "0.1.14",
+  "version": "0.2.0",
   "description": "High-level Git commands for dugite.",
   "main": "lib/index",
   "typings": "lib/index",
   "engines": {
-    "node": ">=10.11.0 <13"
+    "node": ">=10.11.0"
   },
   "scripts": {
     "build": "tsc && tslint -c ./tslint.json --project ./tsconfig.json",
-    "test": "cross-env USE_LOCAL_GIT=true mocha --opts ./mocha.opts src/**/*.spec.ts",
-    "prepare": "yarn run build && yarn run test",
-    "test:watch": "cross-env USE_LOCAL_GIT=true mocha -w --opts ./mocha.opts src/**/*.spec.ts",
-    "test:ssh": "cross-env GIT_OVER_SSH_TEST=true mocha --opts ./mocha.opts src/**/*.spec.ts",
+    "test": "cross-env USE_LOCAL_GIT=true mocha src/**/*.spec.ts",
+    "prepare": "npm run build && npm run test",
+    "test:watch": "cross-env USE_LOCAL_GIT=true mocha -w src/**/*.spec.ts",
+    "test:ssh": "cross-env GIT_OVER_SSH_TEST=true mocha src/**/*.spec.ts",
     "clean": "rimraf ./lib",
     "build:watch": "tsc -w",
     "clean:all": "rimraf ./lib && rimraf ./node_modules"
@@ -34,26 +34,26 @@
   "dependencies": {
     "byline": "^5.0.0",
     "dugite-no-gpl": "1.69.0",
-    "find-git-exec": "^0.0.3",
-    "upath": "^1.0.0"
+    "find-git-exec": "^0.0.4",
+    "upath": "^2.0.1"
   },
   "devDependencies": {
-    "@types/chai": "^4.2.5",
-    "@types/fs-extra": "^4.0.2",
-    "@types/mocha": "^5.2.7",
-    "@types/node": "^7.0.22",
-    "@types/temp": "^0.8.34",
-    "chai": "^4.2.0",
-    "concurrently": "^5.0.0",
-    "cross-env": "^6.0.3",
-    "fs-extra": "^4.0.2",
-    "mocha": "^6.2.2",
-    "node-ssh": "^6.0.0",
+    "@types/chai": "^4.2.22",
+    "@types/fs-extra": "^9.0.13",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^16.11.6",
+    "@types/temp": "^0.9.1",
+    "chai": "^4.3.4",
+    "concurrently": "^6.3.0",
+    "cross-env": "^7.0.3",
+    "fs-extra": "^10.0.0",
+    "mocha": "9.1.3",
+    "node-ssh": "^12.0.1",
     "rimraf": "^3.0.0",
-    "temp": "^0.9.1",
-    "ts-node": "^8.5.2",
-    "tslint": "^5.20.1",
+    "temp": "^0.9.4",
+    "ts-node": "^10.4.0",
+    "tslint": "^6.1.3",
     "tslint-no-unused-expression-chai": "^0.1.4",
-    "typescript": "~3.5.3"
+    "typescript": "~4.4.4"
   }
 }

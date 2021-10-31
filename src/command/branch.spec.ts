@@ -72,8 +72,8 @@ describe('branch', async () => {
 
         const localBranches = await listBranch(path, 'all');
         expect(localBranches.length).to.be.equal(2);
-        expect(localBranches[0].name).to.be.equal('master');
-        expect(localBranches[1].name).to.be.equal(newBranch);
+        expect(localBranches[1].name).to.be.equal('master');
+        expect(localBranches[0].name).to.be.equal(newBranch);
 
         const currentBranch = await listBranch(path, 'current');
         expect(currentBranch).to.not.be.undefined;
@@ -88,8 +88,8 @@ describe('branch', async () => {
 
         const localBranches = await listBranch(path, 'all');
         expect(localBranches.length).to.be.equal(2);
-        expect(localBranches[0].name).to.be.equal('master');
-        expect(localBranches[1].name).to.be.equal(newBranch);
+        expect(localBranches[1].name).to.be.equal('master');
+        expect(localBranches[0].name).to.be.equal(newBranch);
 
         const currentBranch = await listBranch(path, 'current');
         expect(currentBranch).to.not.be.undefined;
