@@ -22,8 +22,5 @@ branches:
   only:
   - master
 
-install:
-  npm install
-
 script:
   npm run build && npm test
