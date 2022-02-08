@@ -6,8 +6,8 @@ const upath = require('upath');
 const normalizeSafe: (path: string) => string = upath.normalizeSafe;
 
 const successExitCodes = new Set([0, 1]);
-const utf8Encoding: (process: ChildProcess) => void = cb => cb.stdout.setEncoding('utf8');
-const binaryEncoding: (process: ChildProcess) => void = cb => cb.stdout.setEncoding('binary');
+const utf8Encoding: (process: ChildProcess) => void = cb => cb.stdout?.setEncoding('utf8');
+const binaryEncoding: (process: ChildProcess) => void = cb => cb.stdout?.setEncoding('binary');
 
 /**
  * Retrieve the text (UTF-8) contents of a file from the repository at a given
