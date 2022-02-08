@@ -197,7 +197,8 @@ describe('stage', async () => {
             expect(fs.readFileSync(path.join(repositoryPath, 'A.txt'), 'utf8')).to.be.deep.equal('A\nModification in the index\nAnother modification in the working tree');
         });
 
-        it('reverting the state in the working tree should not modify the index state', async () => {
+        xit('reverting the state in the working tree should not modify the index state', async () => {
+
             const repositoryPath = await createTestRepository(track.mkdirSync());
 
             await stage(repositoryPath, modify(repositoryPath, { path: 'A.txt', data: 'A\nModification in the index' }));
