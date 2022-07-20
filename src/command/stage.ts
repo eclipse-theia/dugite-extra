@@ -42,23 +42,29 @@ export async function unstage(
     if (!branch.stdout.trim()) {
         args.push(...['rm', '--cached', '-r', '--']);
     } else {
-        if (_where === 'working-tree') {
-            args.push(...['checkout-index', '-f', '-u']);
-        } else {
-            args.push('reset');
-            if (_where === 'index') {
-                args.push('-q');
-            }
+        switch (_where) {
+            case 'working-tree':
+                args.push(...['checkout', '-q', '--']);
+                break;
+            case 'index':
+                args.push(...['reset', '-q', _treeish, '--']);
+                break;
+            case 'all':
+                args.push(...['reset', '-q', '--hard', _treeish]);
+                break;
+            default:
+                break;
         }
-        args.push(...[_treeish, '--']);
     }
-    const paths: string[] = [];
-    if (filePaths === undefined || (Array.isArray(filePaths) && filePaths.length === 0)) {
-        paths.push('.');
-    } else {
-        paths.push(...(Array.isArray(filePaths) ? filePaths : [filePaths]).map(f => path.relative(repositoryPath, f)));
+    if (_where !== 'all') {
+        const paths: string[] = [];
+        if (filePaths === undefined || (Array.isArray(filePaths) && filePaths.length === 0)) {
+            paths.push('.');
+        } else {
+            paths.push(...(Array.isArray(filePaths) ? filePaths : [filePaths]).map(f => path.relative(repositoryPath, f)));
+        }
+        args.push(...paths);
     }
-    args.push(...paths);
     await git(args, repositoryPath, 'unstage', options);
 }
 
