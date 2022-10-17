@@ -5,7 +5,7 @@
   "main": "lib/index",
   "typings": "lib/index",
   "engines": {
-    "node": ">=10.11.0"
+    "node": ">=14"
   },
   "scripts": {
     "build": "tsc && tslint -c ./tslint.json --project ./tsconfig.json",
