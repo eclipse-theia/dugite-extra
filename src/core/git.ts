@@ -145,8 +145,7 @@ function gitExternal(args: string[], path: string, options: IGitExecutionOptions
                         message = 'Unable to find path to repository on disk.'
                         code = RepositoryDoesNotExistErrorCode
                     } else {
-                        message = `Git could not be found at the expected path: '${
-                            process.env.LOCAL_GIT_DIRECTORY
+                        message = `Git could not be found at the expected path: '${process.env.LOCAL_GIT_DIRECTORY
                             }'. This might be a problem with how the application is packaged, so confirm this folder hasn't been removed when packaging.`
                         code = GitNotFoundErrorCode
                     }
@@ -173,8 +172,7 @@ function gitExternal(args: string[], path: string, options: IGitExecutionOptions
             if (err.message === 'stdout maxBuffer exceeded') {
                 reject(
                     new Error(
-                        `The output from the command could not fit into the allocated stdout buffer. Set options.maxBuffer to a larger value than ${
-                        maxBuffer
+                        `The output from the command could not fit into the allocated stdout buffer. Set options.maxBuffer to a larger value than ${maxBuffer
                         } bytes`
                     )
                 )
@@ -391,9 +389,9 @@ function getDescriptionForError(error: DugiteError): string {
         case DugiteError.RevertConflicts:
             return 'To finish reverting, please merge and commit the changes.'
         case DugiteError.EmptyRebasePatch:
-            return 'There aren’t any changes left to apply.'
+            return "There aren't any changes left to apply."
         case DugiteError.NoMatchingRemoteBranch:
-            return 'There aren’t any remote branches that match the current branch.'
+            return "There aren't any remote branches that match the current branch."
         case DugiteError.NothingToCommit:
             return 'There are no changes to commit.'
         case DugiteError.NoSubmoduleMapping:
@@ -450,6 +448,8 @@ function getDescriptionForError(error: DugiteError): string {
             return 'This path is not a valid path inside the repository.'
         case DugiteError.LockFileAlreadyExists:
             return 'A lock file already exists in the repository, which blocks this operation from completing.'
+        case DugiteError.MergeWithLocalChanges:
+            return 'Your local changes to the following files would be overwritten'
         default:
             throw new Error(`Unknown error: ${error}`);
     }
